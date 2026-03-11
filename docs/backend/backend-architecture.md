@@ -18,14 +18,34 @@ packages/
   config/
   eslint-config/
   tsconfig/
+prisma/
+  schema/
+  migrations/
 infra/
   docker/
   compose/
-  migrations/
 docs/
 ```
 
 `apps/api` owns domain APIs and orchestration. `services/analytics` and `services/ai-orchestrator` are runtime boundaries for specialized execution.
+
+## ORM and Data Access Standard
+Use Prisma as the backend ORM for the NestJS API.
+
+Recommended approach:
+- maintain the canonical Prisma schema in the top-level `prisma/` directory
+- generate the Prisma client from that shared schema location for the API application
+- keep domain repositories as thin wrappers around Prisma queries and transactions
+- use Prisma migrations for application-managed schema changes
+
+Why Prisma:
+- strong TypeScript ergonomics for a NestJS codebase
+- good fit for a greenfield modular monolith
+- clean generated types for DTO mapping and service orchestration
+- practical support for PostgreSQL and migration-driven delivery
+
+Constraint:
+- Prisma is the ORM and migration layer, but domain services must still hide raw Prisma access behind repository boundaries
 
 ## NestJS Module Map
 Recommended modules:
@@ -69,6 +89,12 @@ Rules:
 - domain modules should not reach into each other’s repositories directly
 - integration between domains should happen through services, explicit interfaces, or internal domain events
 
+The `db` shared module should provide:
+- `PrismaService`
+- transaction helpers
+- tenant-aware query helpers
+- database session variable helpers for RLS-sensitive flows
+
 ## Suggested Source Layout
 ```text
 apps/api/src/
@@ -97,6 +123,11 @@ apps/api/src/
     platform-admin/
   shared/
     db/
+      prisma/
+      prisma.service.ts
+      prisma.module.ts
+      transaction-manager.ts
+      rls-context.ts
     request-context/
     access-control/
     guards/
@@ -132,7 +163,7 @@ Recommended pattern:
 
 Avoid:
 - business rules in controllers
-- raw ORM entities leaking to clients
+- raw Prisma models leaking to clients
 - cross-module repository access
 
 Suggested internal structure per module:
@@ -144,15 +175,21 @@ modules/projects/
   repositories/
   dto/
   policies/
-  entities/
+  models/
   mappers/
   events/
 ```
 
+Repository guidance with Prisma:
+- repositories may use Prisma client directly
+- repositories should return domain-shaped models or persistence DTOs, not unfiltered Prisma payloads
+- complex multi-write flows should use Prisma transactions coordinated by the service layer or a transaction helper
+- shared query fragments for tenant scoping should live in repository or db helpers, not controllers
+
 ## DTO Conventions
 DTO guidance:
 - separate request DTOs from response DTOs
-- do not return ORM entities directly
+- do not return Prisma models directly
 - include explicit validation decorators
 - prefer clear naming:
   - `CreateProjectRequestDto`
@@ -294,7 +331,12 @@ The core API should not run statistical methods directly.
 - versioned aggregates should prefer append-only write paths
 - audit writes should happen in the same transaction for critical actions when possible
 
+Prisma-specific implications:
+- some RLS-sensitive queries may require explicit transaction wrappers that set PostgreSQL session variables before reads and writes
+- raw SQL should be limited to cases Prisma cannot express cleanly, such as selected policy/session setup or advanced PostgreSQL features
+- Prisma schema naming should align with domain vocabulary: `Project`, `DatasetVersion`, `AnalysisRun`, `EvidenceBundle`, `ManuscriptVersion`
+
 ## Assumptions
 - NestJS remains the main backend framework for v1
 - REST + OpenAPI is preferred over GraphQL
-- Prisma or TypeORM choice is deferred, but repository boundaries should hide ORM specifics
+- Prisma is the standard ORM and migration tool for the backend
