@@ -20,7 +20,7 @@ Recommended app:
 Suggested source layout:
 
 ```text
-apps/web/src/
+frontend/src/
   app/
     (marketing)/
     (auth)/

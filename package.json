@@ -5,8 +5,8 @@
   "packageManager": "pnpm@10.6.0",
   "scripts": {
     "typecheck": "pnpm -r typecheck",
-    "typecheck:api": "pnpm --filter @aiorta/api typecheck",
-    "typecheck:web": "pnpm --filter @aiorta/web typecheck"
+    "typecheck:backend": "pnpm --filter @aiorta/api typecheck",
+    "typecheck:frontend": "pnpm --filter @aiorta/web typecheck"
   },
   "devDependencies": {
     "typescript": "^5.8.2"

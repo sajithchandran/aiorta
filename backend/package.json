@@ -1,0 +1,9 @@
+{
+  "name": "@aiorta/backend",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "typecheck": "pnpm --filter @aiorta/api typecheck",
+    "typecheck:api": "pnpm --filter @aiorta/api typecheck"
+  }
+}

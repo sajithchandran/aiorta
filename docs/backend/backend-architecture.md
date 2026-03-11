@@ -7,33 +7,32 @@ This document defines the NestJS application structure, module map, API conventi
 Recommended monorepo structure:
 
 ```text
-apps/
-  api/
-services/
-  analytics/
-  ai-orchestrator/
-packages/
-  shared-types/
-  api-contracts/
-  config/
-  eslint-config/
-  tsconfig/
-prisma/
-  schema/
-  migrations/
+backend/
+  services/
+    api/
+    analytics/
+    ai-orchestrator/
+  shared/
+    config/
+    types/
+  contracts/
+  prisma/
+    schema/
+    migrations/
+frontend/
 infra/
   docker/
   compose/
 docs/
 ```
 
-`apps/api` owns domain APIs and orchestration. `services/analytics` and `services/ai-orchestrator` are runtime boundaries for specialized execution.
+`backend/services/api` owns domain APIs and orchestration. `backend/services/analytics` and `backend/services/ai-orchestrator` are runtime boundaries for specialized execution. `frontend/` contains the web application scaffold.
 
 ## ORM and Data Access Standard
 Use Prisma as the backend ORM for the NestJS API.
 
 Recommended approach:
-- maintain the canonical Prisma schema in the top-level `prisma/` directory
+- maintain the canonical Prisma schema in `backend/prisma/`
 - generate the Prisma client from that shared schema location for the API application
 - keep domain repositories as thin wrappers around Prisma queries and transactions
 - use Prisma migrations for application-managed schema changes
@@ -97,7 +96,7 @@ The `db` shared module should provide:
 
 ## Suggested Source Layout
 ```text
-apps/api/src/
+backend/services/api/src/
   main.ts
   app.module.ts
   modules/
