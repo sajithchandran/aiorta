@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "packageManager": "pnpm@10.6.0",
   "scripts": {
-    "typecheck": "pnpm -r typecheck",
-    "typecheck:backend": "pnpm --filter @aiorta/api typecheck",
+    "typecheck": "pnpm typecheck:backend && pnpm typecheck:frontend",
+    "typecheck:backend": "pnpm --dir backend typecheck",
     "typecheck:frontend": "pnpm --filter @aiorta/web typecheck"
   },
   "devDependencies": {

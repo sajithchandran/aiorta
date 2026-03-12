@@ -1,0 +1,9 @@
+{
+  "name": "@aiorta/analytics",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "echo \"TODO: implement analytics service build\"",
+    "typecheck": "echo \"TODO: implement analytics service typecheck\""
+  }
+}

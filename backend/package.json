@@ -3,7 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "install:workspace": "pnpm install",
+    "build": "pnpm --filter @aiorta/api build",
+    "build:api": "pnpm --filter @aiorta/api build",
     "typecheck": "pnpm --filter @aiorta/api typecheck",
-    "typecheck:api": "pnpm --filter @aiorta/api typecheck"
+    "typecheck:api": "pnpm --filter @aiorta/api typecheck",
+    "dev:api": "pnpm --filter @aiorta/api start:dev"
   }
 }
