@@ -1,0 +1,9 @@
+{
+  "name": "@aiorta/ai-orchestrator",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "echo \"TODO: implement AI orchestrator build\"",
+    "typecheck": "echo \"TODO: implement AI orchestrator typecheck\""
+  }
+}
