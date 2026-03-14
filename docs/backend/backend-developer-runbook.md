@@ -11,6 +11,10 @@ Current backend services:
 - `services/analytics`: placeholder for analytics service
 - `services/ai-orchestrator`: placeholder for AI orchestration service
 
+Local database assets:
+- `infra/compose/postgres.compose.yml`: local PostgreSQL Docker Compose definition
+- `.env.example`: example local environment values including `DATABASE_URL`
+
 Current shared backend packages:
 - `shared/config`
 - `shared/types`
@@ -54,6 +58,10 @@ pnpm build:api
 pnpm typecheck
 pnpm typecheck:api
 pnpm dev:api
+pnpm db:up
+pnpm db:down
+pnpm db:logs
+pnpm db:push
 ```
 
 What they do:
@@ -62,6 +70,10 @@ What they do:
 - `pnpm typecheck`: runs TypeScript typecheck for the API service
 - `pnpm typecheck:api`: same as above, explicit service target
 - `pnpm dev:api`: starts the NestJS API in watch mode
+- `pnpm db:up`: starts the local PostgreSQL container
+- `pnpm db:down`: stops the local PostgreSQL container
+- `pnpm db:logs`: tails PostgreSQL container logs
+- `pnpm db:push`: applies the Prisma schema to the local PostgreSQL instance
 
 ## API Service Commands
 
@@ -136,12 +148,42 @@ The canonical Prisma location is under:
 Typical workflow once the actual Prisma schema file is in place:
 
 ```bash
-cd backend/services/api
-pnpm prisma generate
-pnpm prisma migrate dev
+cd backend
+pnpm prisma:generate
+pnpm db:push
 ```
 
-If Prisma commands are run from `backend/`, ensure the schema path and working directory are configured consistently.
+The backend workspace owns Prisma generation. The API service delegates upward to the backend workspace for schema generation.
+
+## Local PostgreSQL With Docker Compose
+
+The backend workspace includes a local PostgreSQL setup at:
+- [`/Users/sajithchandran/aira/aiorta/backend/infra/compose/postgres.compose.yml`](/Users/sajithchandran/aira/aiorta/backend/infra/compose/postgres.compose.yml)
+
+Default local connection values:
+- host: `localhost`
+- port: `54329`
+- database: `aiorta`
+- username: `postgres`
+- password: `postgres`
+
+Example environment values are provided in:
+- [`/Users/sajithchandran/aira/aiorta/backend/.env.example`](/Users/sajithchandran/aira/aiorta/backend/.env.example)
+
+Typical local database bootstrap:
+
+```bash
+cd backend
+pnpm db:up
+pnpm db:push
+```
+
+To stop the container:
+
+```bash
+cd backend
+pnpm db:down
+```
 
 ## Typical Developer Flow
 
@@ -155,12 +197,20 @@ pnpm install
 - PostgreSQL
 - Redis
 
+Local PostgreSQL can be started with:
+
+```bash
+cd backend
+pnpm db:up
+```
+
 3. Run Prisma generate/migrations
 
 4. Start the backend API
 
 ```bash
 cd backend
+pnpm db:push
 pnpm dev:api
 ```
 
