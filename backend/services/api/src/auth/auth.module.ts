@@ -17,7 +17,7 @@ import { JwtStrategy } from "./jwt.strategy";
       useFactory: (configService: AppConfigService) => ({
         secret: configService.jwtSecret,
         signOptions: {
-          expiresIn: configService.jwtExpiresIn
+          expiresIn: configService.jwtExpiresIn as never
         }
       })
     })

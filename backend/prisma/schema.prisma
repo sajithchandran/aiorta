@@ -1,0 +1,1028 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantType {
+  INDIVIDUAL
+  TEAM
+  ORGANIZATION
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
+enum RoleScope {
+  GLOBAL
+  TENANT
+  PROJECT
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+  CLOSED
+}
+
+enum DocumentType {
+  PROTOCOL
+  SAP
+  IRB_LETTER
+  DATA_DICTIONARY
+  CONSENT_TEMPLATE
+  MANUSCRIPT_ATTACHMENT
+  OTHER
+}
+
+enum DataSourceType {
+  CSV_UPLOAD
+  EXCEL_UPLOAD
+  MANUAL_ENTRY
+  FHIR
+  DATABASE
+  OTHER
+}
+
+enum DataSourceStatus {
+  PENDING
+  READY
+  FAILED
+  ARCHIVED
+}
+
+enum DatasetStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum DatasetVersionStatus {
+  BUILDING
+  READY
+  APPROVED
+  SUPERSEDED
+  RETIRED
+  FAILED
+}
+
+enum CohortStatus {
+  DRAFT
+  SNAPSHOTTED
+  ARCHIVED
+}
+
+enum CohortRuleNodeType {
+  GROUP
+  CONDITION
+}
+
+enum LogicalOperator {
+  AND
+  OR
+}
+
+enum ComparisonOperator {
+  EQ
+  NEQ
+  GT
+  GTE
+  LT
+  LTE
+  IN
+  NOT_IN
+  BETWEEN
+  EXISTS
+  NOT_EXISTS
+  CONTAINS
+  STARTS_WITH
+  ENDS_WITH
+  DATE_WITHIN
+}
+
+enum DerivedVariableType {
+  NUMERIC
+  CATEGORICAL
+  BOOLEAN
+  DATE
+  TEXT
+}
+
+enum StatisticalPlanStatus {
+  DRAFT
+  APPROVED
+  ARCHIVED
+}
+
+enum AnalysisRunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  APPROVED
+}
+
+enum AnalysisResultType {
+  SUMMARY
+  DESCRIPTIVE
+  GROUP_COMPARISON
+  REGRESSION
+  SURVIVAL
+  SENSITIVITY
+  OTHER
+}
+
+enum ArtifactStatus {
+  DRAFT
+  APPROVED
+  SUPERSEDED
+  ARCHIVED
+}
+
+enum ManuscriptStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  EXPORTED
+  ARCHIVED
+}
+
+enum ManuscriptVersionStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED_FOR_EXPORT
+  EXPORTED
+  SUPERSEDED
+}
+
+enum ManuscriptSectionType {
+  TITLE
+  ABSTRACT
+  INTRODUCTION
+  METHODS
+  RESULTS
+  DISCUSSION
+  REFERENCES
+  SUPPLEMENT
+}
+
+enum ReferenceType {
+  JOURNAL
+  BOOK
+  WEBSITE
+  GUIDELINE
+  PREPRINT
+  OTHER
+}
+
+enum AIJobType {
+  OUTLINE
+  METHODS_DRAFT
+  RESULTS_DRAFT
+  DISCUSSION_DRAFT
+  TABLE_NARRATIVE
+  REVISION_ASSIST
+}
+
+enum AIJobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum AIOutputStatus {
+  DRAFT
+  VALIDATION_FAILED
+  READY_FOR_REVIEW
+  APPROVED
+  REJECTED
+  SUPERSEDED
+}
+
+enum AIReviewDecision {
+  APPROVED
+  REJECTED
+  NEEDS_CHANGES
+}
+
+enum ApprovalTargetType {
+  DATASET_VERSION
+  ANALYSIS_RUN
+  ANALYSIS_RESULT
+  RESULT_TABLE
+  RESULT_FIGURE
+  AI_OUTPUT
+  MANUSCRIPT_VERSION
+  IRB_SUBMISSION
+  PROTOCOL
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
+enum SignatureStatus {
+  PENDING
+  SIGNED
+  REVOKED
+}
+
+enum IRBSubmissionStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum AuditOutcome {
+  SUCCESS
+  FAILURE
+}
+
+enum AccessAction {
+  VIEW
+  DOWNLOAD
+  EXPORT
+  API_READ
+  API_WRITE
+}
+
+enum AccessOutcome {
+  ALLOWED
+  DENIED
+}
+
+model User {
+  id             String            @id @default(uuid()) @db.Uuid
+  tenantId       String?           @db.Uuid
+  createdById    String?           @db.Uuid
+  email          String            @unique
+  fullName       String
+  passwordHash   String?
+  isActive       Boolean           @default(true)
+  lastLoginAt    DateTime?         @db.Timestamptz(6)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  memberships    TenantMembership[]
+  projectMembers ProjectMember[]
+
+  @@index([tenantId, deletedAt])
+  @@index([createdById])
+}
+
+model Tenant {
+  id           String             @id @default(uuid()) @db.Uuid
+  tenantId     String             @unique @db.Uuid
+  createdById  String             @db.Uuid
+  name         String
+  slug         String             @unique
+  type         TenantType
+  isActive     Boolean            @default(true)
+  metadataJson Json?
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  memberships  TenantMembership[]
+  projects     Project[]
+
+  @@index([type, deletedAt])
+}
+
+model TenantMembership {
+  id          String           @id @default(uuid()) @db.Uuid
+  tenantId    String           @db.Uuid
+  createdById String           @db.Uuid
+  userId      String           @db.Uuid
+  roleId      String           @db.Uuid
+  status      MembershipStatus @default(INVITED)
+  invitedAt   DateTime?        @db.Timestamptz(6)
+  joinedAt    DateTime?        @db.Timestamptz(6)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role        Role             @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, userId, deletedAt])
+  @@index([userId, status])
+  @@index([roleId])
+}
+
+model Role {
+  id              String             @id @default(uuid()) @db.Uuid
+  tenantId        String?            @db.Uuid
+  createdById     String?            @db.Uuid
+  name            String
+  key             String             @unique
+  scope           RoleScope
+  isSystem        Boolean            @default(false)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  rolePermissions RolePermission[]
+  tenantMembers   TenantMembership[]
+  projectMembers  ProjectMember[]
+
+  @@index([tenantId, scope, deletedAt])
+}
+
+model Permission {
+  id              String             @id @default(uuid()) @db.Uuid
+  tenantId        String?            @db.Uuid
+  createdById     String?            @db.Uuid
+  key             String             @unique
+  name            String
+  description     String?
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  rolePermissions RolePermission[]
+
+  @@index([tenantId, deletedAt])
+}
+
+model RolePermission {
+  id           String     @id @default(uuid()) @db.Uuid
+  tenantId     String?    @db.Uuid
+  createdById  String?    @db.Uuid
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?  @map("deleted_at") @db.Timestamptz(6)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([tenantId, deletedAt])
+}
+
+model Project {
+  id               String            @id @default(uuid()) @db.Uuid
+  tenantId         String            @db.Uuid
+  createdById      String            @db.Uuid
+  title            String
+  code             String?
+  slug             String
+  description      String?
+  status           ProjectStatus     @default(DRAFT)
+  startsAt         DateTime?         @db.Timestamptz(6)
+  endsAt           DateTime?         @db.Timestamptz(6)
+  metadataJson     Json?
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  members          ProjectMember[]
+  protocols        Protocol[]
+  studyDocuments   StudyDocument[]
+  dataSources      DataSource[]
+  datasets         Dataset[]
+  datasetVersions  DatasetVersion[]
+  cohorts          Cohort[]
+  statisticalPlans StatisticalPlan[]
+  analysisRuns     AnalysisRun[]
+  manuscripts      Manuscript[]
+  aiJobs           AIJob[]
+  approvals        Approval[]
+  irbSubmissions   IRBSubmission[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status, deletedAt])
+  @@index([createdById])
+}
+
+model ProjectMember {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @db.Uuid
+  createdById String    @db.Uuid
+  projectId   String    @db.Uuid
+  userId      String    @db.Uuid
+  roleId      String    @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, projectId, deletedAt])
+  @@index([userId, deletedAt])
+  @@index([roleId])
+}
+
+model Protocol {
+  id             String         @id @default(uuid()) @db.Uuid
+  tenantId       String         @db.Uuid
+  createdById    String         @db.Uuid
+  projectId      String         @db.Uuid
+  version        Int
+  title          String
+  synopsis       String?
+  status         ApprovalStatus @default(PENDING)
+  documentPath   String?
+  checksum       String?
+  metadataJson   Json?
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  project        Project        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  irbSubmissions IRBSubmission[]
+
+  @@unique([projectId, version])
+  @@index([tenantId, projectId, deletedAt])
+}
+
+model StudyDocument {
+  id            String       @id @default(uuid()) @db.Uuid
+  tenantId      String       @db.Uuid
+  createdById   String       @db.Uuid
+  projectId     String       @db.Uuid
+  documentType  DocumentType
+  title         String
+  storagePath   String
+  mimeType      String?
+  fileSizeBytes BigInt?
+  checksum      String?
+  metadataJson  Json?
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, projectId, documentType, deletedAt])
+}
+
+model DataSource {
+  id              String           @id @default(uuid()) @db.Uuid
+  tenantId        String           @db.Uuid
+  createdById     String           @db.Uuid
+  projectId       String           @db.Uuid
+  name            String
+  type            DataSourceType
+  status          DataSourceStatus @default(PENDING)
+  sourceUri       String?
+  storagePath     String?
+  checksum        String?
+  contentType     String?
+  rowCount        Int?
+  metadataJson    Json?
+  ingestedAt      DateTime?        @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  datasets        Dataset[]
+  datasetVersions DatasetVersion[]
+  cohorts         Cohort[]
+
+  @@index([tenantId, projectId, status, deletedAt])
+}
+
+model Dataset {
+  id               String            @id @default(uuid()) @db.Uuid
+  tenantId         String            @db.Uuid
+  createdById      String            @db.Uuid
+  projectId        String            @db.Uuid
+  dataSourceId     String?           @db.Uuid
+  name             String
+  description      String?
+  status           DatasetStatus     @default(DRAFT)
+  metadataJson     Json?
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  dataSource       DataSource?       @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  versions         DatasetVersion[]
+  derivedVariables DerivedVariable[]
+
+  @@index([tenantId, projectId, status, deletedAt])
+}
+
+model DatasetVersion {
+  id              String               @id @default(uuid()) @db.Uuid
+  tenantId        String               @db.Uuid
+  createdById     String               @db.Uuid
+  projectId       String               @db.Uuid
+  datasetId       String               @db.Uuid
+  dataSourceId    String?              @db.Uuid
+  cohortId        String?              @db.Uuid
+  parentVersionId String?              @db.Uuid
+  versionNumber   Int
+  status          DatasetVersionStatus @default(BUILDING)
+  isImmutable     Boolean              @default(true)
+  rowCount        Int?
+  columnCount     Int?
+  schemaHash      String?
+  contentChecksum String?
+  storagePath     String?
+  manifestJson    Json?
+  lineageJson     Json?
+  approvedAt      DateTime?            @db.Timestamptz(6)
+  approvedById    String?              @db.Uuid
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?            @map("deleted_at") @db.Timestamptz(6)
+  project         Project              @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  dataset         Dataset              @relation(fields: [datasetId], references: [id], onDelete: Restrict)
+  dataSource      DataSource?          @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  cohort          Cohort?              @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+  parentVersion   DatasetVersion?      @relation("DatasetVersionLineage", fields: [parentVersionId], references: [id], onDelete: SetNull)
+  childVersions   DatasetVersion[]     @relation("DatasetVersionLineage")
+  analysisRuns    AnalysisRun[]
+  aiJobs          AIJob[]
+  aiOutputs       AIOutput[]
+
+  @@unique([datasetId, versionNumber])
+  @@index([tenantId, projectId, status, deletedAt])
+  @@index([contentChecksum])
+  @@index([cohortId])
+}
+
+model Cohort {
+  id              String       @id @default(uuid()) @db.Uuid
+  tenantId        String       @db.Uuid
+  createdById     String       @db.Uuid
+  projectId       String       @db.Uuid
+  dataSourceId    String?      @db.Uuid
+  name            String
+  description     String?
+  status          CohortStatus @default(DRAFT)
+  versionNumber   Int          @default(1)
+  snapshotAt      DateTime?    @db.Timestamptz(6)
+  subjectCount    Int?
+  metadataJson    Json?
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  project         Project      @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  dataSource      DataSource?  @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  rules           CohortRule[]
+  datasetVersions DatasetVersion[]
+
+  @@index([tenantId, projectId, status, deletedAt])
+}
+
+model CohortRule {
+  id              String             @id @default(uuid()) @db.Uuid
+  tenantId        String             @db.Uuid
+  createdById     String             @db.Uuid
+  cohortId        String             @db.Uuid
+  parentRuleId    String?            @db.Uuid
+  nodeType        CohortRuleNodeType
+  logicalOperator LogicalOperator?
+  fieldKey        String?
+  fieldLabel      String?
+  operator        ComparisonOperator?
+  valueJson       Json?
+  sortOrder       Int                @default(0)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  cohort          Cohort             @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  parentRule      CohortRule?        @relation("CohortRuleTree", fields: [parentRuleId], references: [id], onDelete: Cascade)
+  childRules      CohortRule[]       @relation("CohortRuleTree")
+
+  @@index([tenantId, cohortId, deletedAt])
+  @@index([parentRuleId, sortOrder])
+}
+
+model DerivedVariable {
+  id                     String              @id @default(uuid()) @db.Uuid
+  tenantId               String              @db.Uuid
+  createdById            String              @db.Uuid
+  projectId              String              @db.Uuid
+  datasetId              String              @db.Uuid
+  sourceDatasetVersionId String?             @db.Uuid
+  name                   String
+  label                  String?
+  type                   DerivedVariableType
+  expression             String
+  definitionJson         Json?
+  createdAt              DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt              DateTime?           @map("deleted_at") @db.Timestamptz(6)
+  dataset                Dataset             @relation(fields: [datasetId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, projectId, deletedAt])
+  @@index([datasetId, deletedAt])
+}
+
+model StatisticalPlan {
+  id           String                @id @default(uuid()) @db.Uuid
+  tenantId     String                @db.Uuid
+  createdById  String                @db.Uuid
+  projectId    String                @db.Uuid
+  name         String
+  version      Int                   @default(1)
+  status       StatisticalPlanStatus @default(DRAFT)
+  planJson     Json
+  checksum     String?
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?             @map("deleted_at") @db.Timestamptz(6)
+  project      Project               @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  analysisRuns AnalysisRun[]
+
+  @@unique([projectId, name, version])
+  @@index([tenantId, projectId, status, deletedAt])
+}
+
+model AnalysisRun {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @db.Uuid
+  createdById       String            @db.Uuid
+  projectId         String            @db.Uuid
+  datasetVersionId  String            @db.Uuid
+  statisticalPlanId String?           @db.Uuid
+  runKey            String?
+  status            AnalysisRunStatus @default(QUEUED)
+  parametersJson    Json?
+  runtimeVersion    String?
+  engineVersion     String?
+  packageLockHash   String?
+  jobPayloadJson    Json?
+  startedAt         DateTime?         @db.Timestamptz(6)
+  completedAt       DateTime?         @db.Timestamptz(6)
+  errorMessage      String?
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  project           Project           @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  datasetVersion    DatasetVersion    @relation(fields: [datasetVersionId], references: [id], onDelete: Restrict)
+  statisticalPlan   StatisticalPlan?  @relation(fields: [statisticalPlanId], references: [id], onDelete: SetNull)
+  results           AnalysisResult[]
+  aiJobs            AIJob[]
+  aiOutputs         AIOutput[]
+
+  @@index([tenantId, projectId, status, deletedAt])
+  @@index([datasetVersionId, status])
+  @@index([runKey])
+}
+
+model AnalysisResult {
+  id             String             @id @default(uuid()) @db.Uuid
+  tenantId       String             @db.Uuid
+  createdById    String             @db.Uuid
+  projectId      String             @db.Uuid
+  analysisRunId  String             @db.Uuid
+  resultType     AnalysisResultType
+  title          String
+  status         ArtifactStatus     @default(DRAFT)
+  summaryJson    Json?
+  checksum       String?
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  analysisRun    AnalysisRun        @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  resultTables   ResultTable[]
+  resultFigures  ResultFigure[]
+
+  @@index([tenantId, projectId, resultType, status, deletedAt])
+  @@index([analysisRunId])
+}
+
+model ResultTable {
+  id               String         @id @default(uuid()) @db.Uuid
+  tenantId         String         @db.Uuid
+  createdById      String         @db.Uuid
+  projectId        String         @db.Uuid
+  analysisResultId String         @db.Uuid
+  tableKey         String
+  title            String
+  status           ArtifactStatus @default(DRAFT)
+  storagePath      String?
+  checksum         String?
+  specJson         Json?
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  analysisResult   AnalysisResult @relation(fields: [analysisResultId], references: [id], onDelete: Cascade)
+
+  @@unique([analysisResultId, tableKey])
+  @@index([tenantId, projectId, status, deletedAt])
+}
+
+model ResultFigure {
+  id               String         @id @default(uuid()) @db.Uuid
+  tenantId         String         @db.Uuid
+  createdById      String         @db.Uuid
+  projectId        String         @db.Uuid
+  analysisResultId String         @db.Uuid
+  figureKey        String
+  title            String
+  status           ArtifactStatus @default(DRAFT)
+  storagePath      String?
+  checksum         String?
+  specJson         Json?
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  analysisResult   AnalysisResult @relation(fields: [analysisResultId], references: [id], onDelete: Cascade)
+
+  @@unique([analysisResultId, figureKey])
+  @@index([tenantId, projectId, status, deletedAt])
+}
+
+model Manuscript {
+  id            String           @id @default(uuid()) @db.Uuid
+  tenantId      String           @db.Uuid
+  createdById   String           @db.Uuid
+  projectId     String           @db.Uuid
+  title         String
+  shortTitle    String?
+  status        ManuscriptStatus @default(DRAFT)
+  targetJournal String?
+  metadataJson  Json?
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  versions      ManuscriptVersion[]
+  aiJobs        AIJob[]
+
+  @@index([tenantId, projectId, status, deletedAt])
+}
+
+model ManuscriptVersion {
+  id               String                  @id @default(uuid()) @db.Uuid
+  tenantId         String                  @db.Uuid
+  createdById      String                  @db.Uuid
+  manuscriptId     String                  @db.Uuid
+  versionNumber    Int
+  status           ManuscriptVersionStatus @default(DRAFT)
+  changeSummary    String?
+  outlineJson      Json?
+  approvedAt       DateTime?               @db.Timestamptz(6)
+  approvedById     String?                 @db.Uuid
+  createdAt        DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?               @map("deleted_at") @db.Timestamptz(6)
+  manuscript       Manuscript              @relation(fields: [manuscriptId], references: [id], onDelete: Cascade)
+  sections         ManuscriptSection[]
+  references       Reference[]
+  aiJobs           AIJob[]
+
+  @@unique([manuscriptId, versionNumber])
+  @@index([tenantId, status, deletedAt])
+}
+
+model ManuscriptSection {
+  id                  String               @id @default(uuid()) @db.Uuid
+  tenantId            String               @db.Uuid
+  createdById         String               @db.Uuid
+  manuscriptVersionId String               @db.Uuid
+  sectionType         ManuscriptSectionType
+  title               String?
+  sortOrder           Int                  @default(0)
+  content             String?
+  sourceSummaryJson   Json?
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime?            @map("deleted_at") @db.Timestamptz(6)
+  manuscriptVersion   ManuscriptVersion    @relation(fields: [manuscriptVersionId], references: [id], onDelete: Cascade)
+  aiJobs              AIJob[]
+  aiOutputs           AIOutput[]
+
+  @@index([tenantId, sectionType, deletedAt])
+  @@index([manuscriptVersionId, sectionType, sortOrder])
+}
+
+model Reference {
+  id                  String            @id @default(uuid()) @db.Uuid
+  tenantId            String            @db.Uuid
+  createdById         String            @db.Uuid
+  manuscriptVersionId String            @db.Uuid
+  citationKey         String
+  referenceType       ReferenceType
+  title               String
+  authorsJson         Json?
+  journal             String?
+  publicationYear     Int?
+  doi                 String?
+  url                 String?
+  metadataJson        Json?
+  createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  manuscriptVersion   ManuscriptVersion @relation(fields: [manuscriptVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([manuscriptVersionId, citationKey])
+  @@index([tenantId, deletedAt])
+}
+
+model AIJob {
+  id                    String             @id @default(uuid()) @db.Uuid
+  tenantId              String             @db.Uuid
+  createdById           String             @db.Uuid
+  projectId             String             @db.Uuid
+  manuscriptId          String?            @db.Uuid
+  manuscriptVersionId   String?            @db.Uuid
+  manuscriptSectionId   String?            @db.Uuid
+  datasetVersionId      String?            @db.Uuid
+  analysisRunId         String?            @db.Uuid
+  jobType               AIJobType
+  status                AIJobStatus        @default(QUEUED)
+  provider              String?
+  model                 String?
+  promptTemplateKey     String?
+  promptTemplateVersion String?
+  phiMode               String?
+  inputBundleJson       Json?
+  startedAt             DateTime?          @db.Timestamptz(6)
+  completedAt           DateTime?          @db.Timestamptz(6)
+  createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt             DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  project               Project            @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  manuscript            Manuscript?        @relation(fields: [manuscriptId], references: [id], onDelete: SetNull)
+  manuscriptVersion     ManuscriptVersion? @relation(fields: [manuscriptVersionId], references: [id], onDelete: SetNull)
+  manuscriptSection     ManuscriptSection? @relation(fields: [manuscriptSectionId], references: [id], onDelete: SetNull)
+  datasetVersion        DatasetVersion?    @relation(fields: [datasetVersionId], references: [id], onDelete: SetNull)
+  analysisRun           AnalysisRun?       @relation(fields: [analysisRunId], references: [id], onDelete: SetNull)
+  outputs               AIOutput[]
+
+  @@index([tenantId, projectId, jobType, status, deletedAt])
+  @@index([datasetVersionId])
+  @@index([analysisRunId])
+  @@index([manuscriptSectionId])
+}
+
+model AIOutput {
+  id                  String             @id @default(uuid()) @db.Uuid
+  tenantId            String             @db.Uuid
+  createdById         String             @db.Uuid
+  aiJobId             String             @db.Uuid
+  projectId           String             @db.Uuid
+  datasetVersionId    String             @db.Uuid
+  analysisRunId       String             @db.Uuid
+  manuscriptSectionId String             @db.Uuid
+  outputText          String
+  structuredJson      Json?
+  validationJson      Json?
+  checksum            String?
+  status              AIOutputStatus     @default(DRAFT)
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  aiJob               AIJob              @relation(fields: [aiJobId], references: [id], onDelete: Cascade)
+  datasetVersion      DatasetVersion     @relation(fields: [datasetVersionId], references: [id], onDelete: Restrict)
+  analysisRun         AnalysisRun        @relation(fields: [analysisRunId], references: [id], onDelete: Restrict)
+  manuscriptSection   ManuscriptSection  @relation(fields: [manuscriptSectionId], references: [id], onDelete: Restrict)
+  reviews             AIReview[]
+
+  @@index([tenantId, projectId, status, deletedAt])
+  @@index([datasetVersionId, analysisRunId, manuscriptSectionId])
+}
+
+model AIReview {
+  id           String           @id @default(uuid()) @db.Uuid
+  tenantId     String           @db.Uuid
+  createdById  String           @db.Uuid
+  aiOutputId   String           @db.Uuid
+  reviewerId   String           @db.Uuid
+  decision     AIReviewDecision
+  comments     String?
+  reviewedAt   DateTime         @default(now()) @db.Timestamptz(6)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  aiOutput     AIOutput         @relation(fields: [aiOutputId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, aiOutputId, deletedAt])
+  @@index([reviewerId])
+}
+
+model Approval {
+  id            String             @id @default(uuid()) @db.Uuid
+  tenantId      String             @db.Uuid
+  createdById   String             @db.Uuid
+  projectId     String?            @db.Uuid
+  targetType    ApprovalTargetType
+  targetId      String             @db.Uuid
+  status        ApprovalStatus     @default(PENDING)
+  requestedById String             @db.Uuid
+  decidedById   String?            @db.Uuid
+  notes         String?
+  decidedAt     DateTime?          @db.Timestamptz(6)
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  project       Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  signatures    Signature[]
+
+  @@index([tenantId, projectId, targetType, status, deletedAt])
+  @@index([targetType, targetId])
+}
+
+model Signature {
+  id            String          @id @default(uuid()) @db.Uuid
+  tenantId      String          @db.Uuid
+  createdById   String          @db.Uuid
+  approvalId    String          @db.Uuid
+  signerId      String          @db.Uuid
+  status        SignatureStatus @default(PENDING)
+  signatureHash String
+  signedAt      DateTime?       @db.Timestamptz(6)
+  metadataJson  Json?
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?       @map("deleted_at") @db.Timestamptz(6)
+  approval      Approval        @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, approvalId, status, deletedAt])
+  @@index([signerId])
+}
+
+model IRBSubmission {
+  id              String              @id @default(uuid()) @db.Uuid
+  tenantId        String              @db.Uuid
+  createdById     String              @db.Uuid
+  projectId       String              @db.Uuid
+  protocolId      String?             @db.Uuid
+  referenceNumber String?
+  status          IRBSubmissionStatus @default(DRAFT)
+  submissionJson  Json?
+  submittedAt     DateTime?           @db.Timestamptz(6)
+  approvedAt      DateTime?           @db.Timestamptz(6)
+  expiresAt       DateTime?           @db.Timestamptz(6)
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?           @map("deleted_at") @db.Timestamptz(6)
+  project         Project             @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  protocol        Protocol?           @relation(fields: [protocolId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, projectId, status, deletedAt])
+  @@index([referenceNumber])
+}
+
+model AuditLog {
+  id           String       @id @default(uuid()) @db.Uuid
+  tenantId     String       @db.Uuid
+  createdById  String       @db.Uuid
+  projectId    String?      @db.Uuid
+  actorUserId  String?      @db.Uuid
+  resourceType String
+  resourceId   String?      @db.Uuid
+  action       String
+  outcome      AuditOutcome
+  requestId    String?
+  ipAddress    String?
+  userAgent    String?
+  beforeJson   Json?
+  afterJson    Json?
+  metadataJson Json?
+  occurredAt   DateTime     @default(now()) @db.Timestamptz(6)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?    @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([tenantId, projectId, occurredAt])
+  @@index([resourceType, resourceId])
+  @@index([actorUserId, occurredAt])
+  @@index([requestId])
+}
+
+model AccessLog {
+  id           String        @id @default(uuid()) @db.Uuid
+  tenantId     String        @db.Uuid
+  createdById  String        @db.Uuid
+  projectId    String?       @db.Uuid
+  actorUserId  String?       @db.Uuid
+  resourceType String
+  resourceId   String?       @db.Uuid
+  action       AccessAction
+  outcome      AccessOutcome
+  requestId    String?
+  ipAddress    String?
+  userAgent    String?
+  metadataJson Json?
+  accessedAt   DateTime      @default(now()) @db.Timestamptz(6)
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?     @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([tenantId, projectId, accessedAt])
+  @@index([actorUserId, accessedAt])
+  @@index([resourceType, resourceId])
+  @@index([requestId])
+}
