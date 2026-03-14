@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class TenantPrismaService {
-  tenantWhere<TWhere extends Record<string, unknown>>(
+  tenantWhere<TWhere extends object>(
     tenantId: string,
     where: TWhere = {} as TWhere
   ): TWhere & { tenantId: string; deletedAt: null } {
@@ -13,7 +13,7 @@ export class TenantPrismaService {
     };
   }
 
-  tenantCreateData<TData extends Record<string, unknown>>(
+  tenantCreateData<TData extends object>(
     tenantId: string,
     actorUserId: string,
     data: TData

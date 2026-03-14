@@ -11,6 +11,11 @@ Current backend services:
 - `services/analytics`: placeholder for analytics service
 - `services/ai-orchestrator`: placeholder for AI orchestration service
 
+Local database assets:
+- `infra/compose/postgres.compose.yml`: local PostgreSQL Docker Compose definition
+- `.env.example`: example local environment values including `DATABASE_URL`
+- PgAdmin is included in the same Compose stack for local DB inspection
+
 Current shared backend packages:
 - `shared/config`
 - `shared/types`
@@ -54,6 +59,11 @@ pnpm build:api
 pnpm typecheck
 pnpm typecheck:api
 pnpm dev:api
+pnpm db:up
+pnpm db:down
+pnpm db:logs
+pnpm db:push
+pnpm db:seed
 ```
 
 What they do:
@@ -62,6 +72,11 @@ What they do:
 - `pnpm typecheck`: runs TypeScript typecheck for the API service
 - `pnpm typecheck:api`: same as above, explicit service target
 - `pnpm dev:api`: starts the NestJS API in watch mode
+- `pnpm db:up`: starts the local PostgreSQL container
+- `pnpm db:down`: stops the local PostgreSQL container
+- `pnpm db:logs`: tails Compose service logs
+- `pnpm db:push`: applies the Prisma schema to the local PostgreSQL instance
+- `pnpm db:seed`: loads deterministic development data into the local PostgreSQL instance
 
 ## API Service Commands
 
@@ -136,12 +151,59 @@ The canonical Prisma location is under:
 Typical workflow once the actual Prisma schema file is in place:
 
 ```bash
-cd backend/services/api
-pnpm prisma generate
-pnpm prisma migrate dev
+cd backend
+pnpm prisma:generate
+pnpm db:push
 ```
 
-If Prisma commands are run from `backend/`, ensure the schema path and working directory are configured consistently.
+The backend workspace owns Prisma generation. The API service delegates upward to the backend workspace for schema generation.
+
+## Local PostgreSQL With Docker Compose
+
+The backend workspace includes a local PostgreSQL + PgAdmin setup at:
+- [`/Users/sajithchandran/aira/aiorta/backend/infra/compose/postgres.compose.yml`](/Users/sajithchandran/aira/aiorta/backend/infra/compose/postgres.compose.yml)
+
+Default local connection values:
+- host: `localhost`
+- port: `54329`
+- database: `aiorta`
+- username: `postgres`
+- password: `postgres`
+
+Example environment values are provided in:
+- [`/Users/sajithchandran/aira/aiorta/backend/.env.example`](/Users/sajithchandran/aira/aiorta/backend/.env.example)
+
+PgAdmin defaults:
+- URL: [http://localhost:5050](http://localhost:5050)
+- email: `admin@aiorta.dev`
+- password: `admin`
+
+PgAdmin behavior:
+- the local PostgreSQL server is auto-registered on startup as `AIORTA Local PostgreSQL`
+- if PgAdmin was already running before `servers.json` was added, recreate the stack once with `pnpm db:down` then `pnpm db:up`
+
+When adding the PostgreSQL server inside PgAdmin, use:
+- host: `postgres`
+- port: `5432`
+- username: `postgres`
+- password: `postgres`
+- database: `aiorta`
+
+Typical local database bootstrap:
+
+```bash
+cd backend
+pnpm db:up
+pnpm db:push
+pnpm db:seed
+```
+
+To stop the container:
+
+```bash
+cd backend
+pnpm db:down
+```
 
 ## Typical Developer Flow
 
@@ -155,12 +217,21 @@ pnpm install
 - PostgreSQL
 - Redis
 
+Local PostgreSQL can be started with:
+
+```bash
+cd backend
+pnpm db:up
+```
+
 3. Run Prisma generate/migrations
 
 4. Start the backend API
 
 ```bash
 cd backend
+pnpm db:push
+pnpm db:seed
 pnpm dev:api
 ```
 
@@ -221,6 +292,31 @@ Check:
 - `DATABASE_URL`
 - PostgreSQL availability
 - migration state
+
+## Development Seed Data
+
+The backend workspace includes a deterministic seed script at:
+- [`/Users/sajithchandran/aira/aiorta/backend/prisma/seed.ts`](/Users/sajithchandran/aira/aiorta/backend/prisma/seed.ts)
+
+Run it with:
+
+```bash
+cd backend
+pnpm db:seed
+```
+
+Seeded development login:
+- email: `dev@aiorta.dev`
+- password: `DevPassword123!`
+
+Seeded development assets:
+- tenant slug: `aiorta-dev`
+- project slug: `heart-failure-outcomes`
+- cohort, dataset, dataset version
+- statistical plan and analysis run
+- manuscript, manuscript version, IMRaD sections
+- AI job, AI output, AI review
+- approval record
 
 ### Redis connection errors
 Check:

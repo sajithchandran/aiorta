@@ -9,12 +9,13 @@ export class TenantContextResolver {
     const routeTenantId = request.params["tenantId"];
     const headerTenantId = request.headers[TENANT_HEADER_KEY];
     const headerValue = typeof headerTenantId === "string" ? headerTenantId : undefined;
+    const routeValue = typeof routeTenantId === "string" ? routeTenantId : undefined;
 
-    if (routeTenantId && headerValue && routeTenantId !== headerValue) {
+    if (routeValue && headerValue && routeValue !== headerValue) {
       throw new MissingTenantContextException();
     }
 
-    const resolvedTenantId = routeTenantId ?? headerValue;
+    const resolvedTenantId = routeValue ?? headerValue;
 
     if (!resolvedTenantId && options?.required) {
       throw new MissingTenantContextException();

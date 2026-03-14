@@ -1,4 +1,9 @@
-import { Injectable, NotImplementedException } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException
+} from "@nestjs/common";
+import { DatasetVersionStatus, Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { TenantPrismaService } from "../prisma/tenant-prisma.service";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
@@ -12,53 +17,163 @@ export class DatasetsService {
     private readonly tenantPrisma: TenantPrismaService
   ) {}
 
-  createDataset(tenantId: string, projectId: string, actorUserId: string, payload: CreateDatasetDto): never {
-    const scopedProjectWhere = this.tenantPrisma.tenantWhere(tenantId, { id: projectId });
-    const createData = this.tenantPrisma.tenantCreateData(tenantId, actorUserId, {
-      ...payload,
-      projectId
-    });
-    void scopedProjectWhere;
-    void createData;
-    // TODO: Persist dataset definition and audit event.
-    throw new NotImplementedException("Dataset creation is not implemented yet.");
+  async createDataset(
+    tenantId: string,
+    projectId: string,
+    actorUserId: string,
+    payload: CreateDatasetDto
+  ) {
+    await this.ensureProjectExists(tenantId, projectId);
+
+    try {
+      return await this.prisma.dataset.create({
+        data: this.tenantPrisma.tenantCreateData(tenantId, actorUserId, {
+          ...payload,
+          projectId
+        })
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new ConflictException(
+          `A dataset with name ${payload.name} already exists in this project.`
+        );
+      }
+
+      throw error;
+    }
   }
 
-  createDatasetVersion(
+  async createDatasetVersion(
     tenantId: string,
     projectId: string,
     datasetId: string,
     actorUserId: string,
     payload: CreateDatasetVersionDto
-  ): never {
-    const scopedDatasetWhere = this.tenantPrisma.tenantWhere(tenantId, {
-      projectId,
-      id: datasetId
+  ) {
+    const dataset = await this.prisma.dataset.findFirst({
+      where: this.tenantPrisma.tenantWhere(tenantId, {
+        projectId,
+        id: datasetId
+      })
     });
-    const createData = this.tenantPrisma.tenantCreateData(tenantId, actorUserId, {
-      ...payload,
-      projectId,
-      datasetId
+
+    if (!dataset) {
+      throw new NotFoundException(`Dataset ${datasetId} was not found.`);
+    }
+
+    const latestVersion = await this.prisma.datasetVersion.findFirst({
+      where: this.tenantPrisma.tenantWhere(tenantId, {
+        projectId,
+        datasetId
+      }),
+      orderBy: {
+        versionNumber: "desc"
+      },
+      select: {
+        versionNumber: true
+      }
     });
-    void scopedDatasetWhere;
-    void createData;
-    // TODO: Queue dataset materialization and persist DatasetVersion in BUILDING state.
-    throw new NotImplementedException("Dataset version creation is not implemented yet.");
+
+    return this.prisma.datasetVersion.create({
+      data: this.tenantPrisma.tenantCreateData(tenantId, actorUserId, {
+        projectId,
+        datasetId,
+        dataSourceId: dataset.dataSourceId,
+        cohortId: payload.cohortId,
+        parentVersionId: payload.parentVersionId,
+        versionNumber: (latestVersion?.versionNumber ?? 0) + 1,
+        status: DatasetVersionStatus.BUILDING
+      })
+    });
   }
 
-  listDatasetVersions(
+  async listDatasetVersions(
     tenantId: string,
     projectId: string,
     datasetId: string,
     query: QueryDatasetVersionsDto
-  ): never {
-    void this.tenantPrisma.tenantWhere(tenantId, { projectId, datasetId });
-    void query;
-    throw new NotImplementedException("Dataset version listing is not implemented yet.");
+  ) {
+    await this.ensureDatasetExists(tenantId, projectId, datasetId);
+
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+    const where = this.tenantPrisma.tenantWhere(tenantId, {
+      projectId,
+      datasetId
+    });
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.datasetVersion.findMany({
+        where,
+        orderBy: {
+          versionNumber: "desc"
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize
+      }),
+      this.prisma.datasetVersion.count({ where })
+    ]);
+
+    return { success: true, items, page, pageSize, total };
   }
 
-  getLineageSummary(tenantId: string, projectId: string, datasetId: string): never {
-    void this.tenantPrisma.tenantWhere(tenantId, { projectId, id: datasetId });
-    throw new NotImplementedException("Dataset lineage summary is not implemented yet.");
+  async getLineageSummary(tenantId: string, projectId: string, datasetId: string) {
+    await this.ensureDatasetExists(tenantId, projectId, datasetId);
+
+    const versions = await this.prisma.datasetVersion.findMany({
+      where: this.tenantPrisma.tenantWhere(tenantId, { projectId, datasetId }),
+      orderBy: {
+        versionNumber: "asc"
+      },
+      select: {
+        id: true,
+        versionNumber: true,
+        status: true,
+        parentVersionId: true,
+        cohortId: true,
+        dataSourceId: true,
+        rowCount: true,
+        columnCount: true,
+        createdAt: true
+      }
+    });
+
+    return {
+      datasetId,
+      versionCount: versions.length,
+      versions
+    };
+  }
+
+  private async ensureProjectExists(tenantId: string, projectId: string): Promise<void> {
+    const project = await this.prisma.project.findFirst({
+      where: this.tenantPrisma.tenantWhere(tenantId, { id: projectId }),
+      select: { id: true }
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} was not found.`);
+    }
+  }
+
+  private async ensureDatasetExists(
+    tenantId: string,
+    projectId: string,
+    datasetId: string
+  ): Promise<void> {
+    const dataset = await this.prisma.dataset.findFirst({
+      where: this.tenantPrisma.tenantWhere(tenantId, {
+        projectId,
+        id: datasetId
+      }),
+      select: { id: true }
+    });
+
+    if (!dataset) {
+      throw new NotFoundException(`Dataset ${datasetId} was not found.`);
+    }
   }
 }

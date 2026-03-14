@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { CurrentTenant } from "../common/decorators/current-tenant.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
-import { Permissions } from "../common/decorators/permissions.decorator";
+import { RequirePermission } from "../common/decorators/require-permission.decorator";
 import { PermissionKey } from "../common/enums/permission-key.enum";
 import { PermissionsGuard } from "../common/guards/permissions.guard";
 import { TenantMembershipGuard } from "../common/guards/tenant-membership.guard";
@@ -18,10 +19,10 @@ import { ManuscriptsService } from "./manuscripts.service";
 export class ManuscriptsController {
   constructor(private readonly manuscriptsService: ManuscriptsService) {}
 
-  @Permissions(PermissionKey.MANUSCRIPT_CREATE)
+  @RequirePermission(PermissionKey.MANUSCRIPT_CREATE)
   @Post("manuscripts")
   createManuscript(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() payload: CreateManuscriptDto
@@ -29,10 +30,10 @@ export class ManuscriptsController {
     return this.manuscriptsService.createManuscript(tenantId, projectId, user.userId, payload);
   }
 
-  @Permissions(PermissionKey.MANUSCRIPT_CREATE)
+  @RequirePermission(PermissionKey.MANUSCRIPT_CREATE)
   @Post("manuscripts/:manuscriptId/versions")
   createVersion(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Param("manuscriptId") manuscriptId: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -47,10 +48,10 @@ export class ManuscriptsController {
     );
   }
 
-  @Permissions(PermissionKey.MANUSCRIPT_CREATE)
+  @RequirePermission(PermissionKey.MANUSCRIPT_CREATE)
   @Patch("manuscript-versions/:manuscriptVersionId/sections/:sectionId")
   updateSection(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Param("manuscriptVersionId") manuscriptVersionId: string,
     @Param("sectionId") sectionId: string,
@@ -65,10 +66,10 @@ export class ManuscriptsController {
     );
   }
 
-  @Permissions(PermissionKey.PROJECT_READ)
+  @RequirePermission(PermissionKey.PROJECT_READ)
   @Get("manuscripts/:manuscriptId/versions")
   listVersions(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Param("manuscriptId") manuscriptId: string
   ) {

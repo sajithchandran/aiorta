@@ -26,4 +26,18 @@ export class CreateCohortRuleDto {
   @IsOptional()
   @IsEnum(ComparisonOperator)
   operator?: ComparisonOperator;
+
+  @ApiPropertyOptional({ type: "object", additionalProperties: true })
+  @IsOptional()
+  valueJson?: Record<string, unknown>;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  fieldLabel?: string;
+
+  @ApiPropertyOptional({ default: 0 })
+  @IsOptional()
+  @IsInt()
+  sortOrder?: number;
 }

@@ -1,34 +1,140 @@
-import { Injectable, NotImplementedException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { AnalysisRunStatus, Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { TenantPrismaService } from "../prisma/tenant-prisma.service";
 import { CreateAnalysisRunDto } from "./dto/create-analysis-run.dto";
 import { CreateStatisticalPlanDto } from "./dto/create-statistical-plan.dto";
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenantPrisma: TenantPrismaService
+  ) {}
 
-  createStatisticalPlan(tenantId: string, projectId: string, actorUserId: string, payload: CreateStatisticalPlanDto): never {
-    void this.prisma.buildTenantWhere(tenantId, { projectId });
-    void actorUserId;
-    void payload;
-    throw new NotImplementedException("Statistical plan creation is not implemented yet.");
+  async createStatisticalPlan(
+    tenantId: string,
+    projectId: string,
+    actorUserId: string,
+    payload: CreateStatisticalPlanDto
+  ) {
+    const latestVersion = await this.prisma.statisticalPlan.findFirst({
+      where: this.tenantPrisma.tenantWhere(tenantId, {
+        projectId,
+        name: payload.name
+      }),
+      orderBy: {
+        version: "desc"
+      },
+      select: {
+        version: true
+      }
+    });
+
+    return this.prisma.statisticalPlan.create({
+      data: this.tenantPrisma.tenantCreateData(tenantId, actorUserId, {
+        projectId,
+        name: payload.name,
+        planJson: payload.planJson as Prisma.InputJsonValue,
+        version: (latestVersion?.version ?? 0) + 1
+      })
+    });
   }
 
-  startAnalysisRun(tenantId: string, projectId: string, actorUserId: string, payload: CreateAnalysisRunDto): never {
-    void this.prisma.buildTenantWhere(tenantId, { projectId });
-    void actorUserId;
-    void payload;
-    // TODO: Create AnalysisRun in QUEUED state and hand off to jobs module.
-    throw new NotImplementedException("Analysis run creation is not implemented yet.");
+  async startAnalysisRun(
+    tenantId: string,
+    projectId: string,
+    actorUserId: string,
+    payload: CreateAnalysisRunDto
+  ) {
+    await this.ensureDatasetVersionExists(tenantId, projectId, payload.datasetVersionId);
+
+    return this.prisma.analysisRun.create({
+      data: this.tenantPrisma.tenantCreateData(tenantId, actorUserId, {
+        projectId,
+        datasetVersionId: payload.datasetVersionId,
+        statisticalPlanId: payload.statisticalPlanId,
+        parametersJson: payload.parametersJson as Prisma.InputJsonValue | undefined,
+        status: AnalysisRunStatus.QUEUED
+      })
+    });
   }
 
-  getAnalysisRunStatus(tenantId: string, projectId: string, analysisRunId: string): never {
-    void this.prisma.buildTenantWhere(tenantId, { projectId, id: analysisRunId });
-    throw new NotImplementedException("Analysis run status is not implemented yet.");
+  async getAnalysisRunStatus(tenantId: string, projectId: string, analysisRunId: string) {
+    const run = await this.prisma.analysisRun.findFirst({
+      where: this.tenantPrisma.tenantWhere(tenantId, { projectId, id: analysisRunId }),
+      include: {
+        datasetVersion: true,
+        statisticalPlan: true
+      }
+    });
+
+    if (!run) {
+      throw new NotFoundException(`Analysis run ${analysisRunId} was not found.`);
+    }
+
+    return run;
   }
 
-  getArtifactSummary(tenantId: string, projectId: string, analysisRunId: string): never {
-    void this.prisma.buildTenantWhere(tenantId, { projectId, id: analysisRunId });
-    throw new NotImplementedException("Analysis artifact summary is not implemented yet.");
+  async getArtifactSummary(tenantId: string, projectId: string, analysisRunId: string) {
+    await this.ensureAnalysisRunExists(tenantId, projectId, analysisRunId);
+
+    const results = await this.prisma.analysisResult.findMany({
+      where: this.tenantPrisma.tenantWhere(tenantId, {
+        projectId,
+        analysisRunId
+      }),
+      include: {
+        resultTables: true,
+        resultFigures: true
+      },
+      orderBy: {
+        createdAt: "asc"
+      }
+    });
+
+    return {
+      analysisRunId,
+      resultCount: results.length,
+      tableCount: results.reduce((count, result) => count + result.resultTables.length, 0),
+      figureCount: results.reduce((count, result) => count + result.resultFigures.length, 0),
+      results
+    };
+  }
+
+  private async ensureDatasetVersionExists(
+    tenantId: string,
+    projectId: string,
+    datasetVersionId: string
+  ): Promise<void> {
+    const datasetVersion = await this.prisma.datasetVersion.findFirst({
+      where: this.tenantPrisma.tenantWhere(tenantId, {
+        projectId,
+        id: datasetVersionId
+      }),
+      select: { id: true }
+    });
+
+    if (!datasetVersion) {
+      throw new NotFoundException(`Dataset version ${datasetVersionId} was not found.`);
+    }
+  }
+
+  private async ensureAnalysisRunExists(
+    tenantId: string,
+    projectId: string,
+    analysisRunId: string
+  ): Promise<void> {
+    const analysisRun = await this.prisma.analysisRun.findFirst({
+      where: this.tenantPrisma.tenantWhere(tenantId, {
+        projectId,
+        id: analysisRunId
+      }),
+      select: { id: true }
+    });
+
+    if (!analysisRun) {
+      throw new NotFoundException(`Analysis run ${analysisRunId} was not found.`);
+    }
   }
 }

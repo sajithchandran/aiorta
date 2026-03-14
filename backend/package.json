@@ -2,8 +2,20 @@
   "name": "@aiorta/backend",
   "private": true,
   "version": "0.1.0",
+  "dependencies": {
+    "@prisma/client": "6.19.2"
+  },
+  "devDependencies": {
+    "prisma": "6.19.2"
+  },
   "scripts": {
     "install:workspace": "pnpm install",
+    "prisma:generate": "PRISMA_GENERATE_SKIP_AUTOINSTALL=1 ./services/api/node_modules/.bin/prisma generate --schema prisma/schema.prisma",
+    "db:up": "docker compose -f infra/compose/postgres.compose.yml up -d",
+    "db:down": "docker compose -f infra/compose/postgres.compose.yml down",
+    "db:logs": "docker compose -f infra/compose/postgres.compose.yml logs -f postgres",
+    "db:push": "pnpm prisma:generate && DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@localhost:54329/aiorta?schema=public} ./services/api/node_modules/.bin/prisma db push --schema prisma/schema.prisma",
+    "db:seed": "pnpm prisma:generate && DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@localhost:54329/aiorta?schema=public} ./services/api/node_modules/.bin/ts-node --project tsconfig.seed.json prisma/seed.ts",
     "build": "pnpm --filter @aiorta/api build",
     "build:api": "pnpm --filter @aiorta/api build",
     "typecheck": "pnpm --filter @aiorta/api typecheck",

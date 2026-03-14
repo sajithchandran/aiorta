@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "AIORTA Local PostgreSQL",
+      "Group": "AIORTA",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "aiorta",
+      "Username": "postgres",
+      "SSLMode": "prefer"
+    }
+  }
+}

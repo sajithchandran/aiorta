@@ -1,4 +1,4 @@
-import { Injectable, NotImplementedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { AccessAction, AccessOutcome, AuditOutcome } from "@prisma/client";
 import { RequestContextService } from "../common/request-context/request-context.service";
 import { PrismaService } from "../prisma/prisma.service";
@@ -70,11 +70,51 @@ export class AuditService {
     }
   }
 
-  listAuditLogs(_tenantId: string, _query: QueryAuditLogsDto): never {
-    throw new NotImplementedException("Audit log queries are not implemented yet.");
+  async listAuditLogs(tenantId: string, query: QueryAuditLogsDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+    const where = {
+      tenantId,
+      deletedAt: null,
+      ...(query.projectId ? { projectId: query.projectId } : {})
+    };
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.auditLog.findMany({
+        where,
+        orderBy: {
+          occurredAt: "desc"
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize
+      }),
+      this.prisma.auditLog.count({ where })
+    ]);
+
+    return { success: true, items, page, pageSize, total };
   }
 
-  listAccessLogs(_tenantId: string, _query: QueryAuditLogsDto): never {
-    throw new NotImplementedException("Access log queries are not implemented yet.");
+  async listAccessLogs(tenantId: string, query: QueryAuditLogsDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+    const where = {
+      tenantId,
+      deletedAt: null,
+      ...(query.projectId ? { projectId: query.projectId } : {})
+    };
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.accessLog.findMany({
+        where,
+        orderBy: {
+          accessedAt: "desc"
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize
+      }),
+      this.prisma.accessLog.count({ where })
+    ]);
+
+    return { success: true, items, page, pageSize, total };
   }
 }
