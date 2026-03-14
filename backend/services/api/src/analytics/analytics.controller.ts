@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { CurrentTenant } from "../common/decorators/current-tenant.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
@@ -10,6 +10,7 @@ import { AuthenticatedUser } from "../common/types/authenticated-user.type";
 import { AnalyticsService } from "./analytics.service";
 import { CreateAnalysisRunDto } from "./dto/create-analysis-run.dto";
 import { CreateStatisticalPlanDto } from "./dto/create-statistical-plan.dto";
+import { QueryAnalysisRunsDto } from "./dto/query-analysis-runs.dto";
 
 @ApiTags("analytics")
 @ApiBearerAuth()
@@ -17,6 +18,16 @@ import { CreateStatisticalPlanDto } from "./dto/create-statistical-plan.dto";
 @Controller("tenants/:tenantId/projects/:projectId")
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
+
+  @RequirePermission(PermissionKey.PROJECT_READ)
+  @Get("analysis-runs")
+  listAnalysisRuns(
+    @CurrentTenant() tenantId: string,
+    @Param("projectId") projectId: string,
+    @Query() query: QueryAnalysisRunsDto
+  ) {
+    return this.analyticsService.listAnalysisRuns(tenantId, projectId, query);
+  }
 
   @RequirePermission(PermissionKey.ANALYSIS_RUN_CREATE)
   @Post("statistical-plans")

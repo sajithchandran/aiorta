@@ -56,6 +56,16 @@ const DEV_PASSWORD_HASH =
 
 const permissions: Array<Pick<Permission, "key" | "name" | "description">> = [
   {
+    key: "TENANT_READ",
+    name: "Read tenant resources",
+    description: "Read tenant-scoped members and users."
+  },
+  {
+    key: "TENANT_UPDATE",
+    name: "Update tenant resources",
+    description: "Manage tenant-scoped members and users."
+  },
+  {
     key: "PROJECT_CREATE",
     name: "Create projects",
     description: "Create projects within a tenant."
@@ -184,7 +194,7 @@ async function main(): Promise<void> {
   });
 
   const allPermissionKeys = permissions.map((permission) => permission.key);
-  const reviewerPermissionKeys = ["PROJECT_READ", "AUDIT_READ"];
+  const reviewerPermissionKeys = ["TENANT_READ", "PROJECT_READ", "AUDIT_READ"];
 
   await seedRolePermissions(TENANT_OWNER_ROLE_ID, allPermissionKeys, permissionRecords);
   await seedRolePermissions(PROJECT_PI_ROLE_ID, allPermissionKeys, permissionRecords);

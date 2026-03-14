@@ -11,6 +11,8 @@ enum TenantType {
   INDIVIDUAL
   TEAM
   ORGANIZATION
+
+  @@map("tenant_type")
 }
 
 enum MembershipStatus {
@@ -18,12 +20,16 @@ enum MembershipStatus {
   ACTIVE
   SUSPENDED
   REMOVED
+
+  @@map("membership_status")
 }
 
 enum RoleScope {
   GLOBAL
   TENANT
   PROJECT
+
+  @@map("role_scope")
 }
 
 enum ProjectStatus {
@@ -31,6 +37,8 @@ enum ProjectStatus {
   ACTIVE
   ARCHIVED
   CLOSED
+
+  @@map("project_status")
 }
 
 enum DocumentType {
@@ -41,6 +49,8 @@ enum DocumentType {
   CONSENT_TEMPLATE
   MANUSCRIPT_ATTACHMENT
   OTHER
+
+  @@map("document_type")
 }
 
 enum DataSourceType {
@@ -50,6 +60,8 @@ enum DataSourceType {
   FHIR
   DATABASE
   OTHER
+
+  @@map("data_source_type")
 }
 
 enum DataSourceStatus {
@@ -57,12 +69,16 @@ enum DataSourceStatus {
   READY
   FAILED
   ARCHIVED
+
+  @@map("data_source_status")
 }
 
 enum DatasetStatus {
   DRAFT
   ACTIVE
   ARCHIVED
+
+  @@map("dataset_status")
 }
 
 enum DatasetVersionStatus {
@@ -72,22 +88,30 @@ enum DatasetVersionStatus {
   SUPERSEDED
   RETIRED
   FAILED
+
+  @@map("dataset_version_status")
 }
 
 enum CohortStatus {
   DRAFT
   SNAPSHOTTED
   ARCHIVED
+
+  @@map("cohort_status")
 }
 
 enum CohortRuleNodeType {
   GROUP
   CONDITION
+
+  @@map("cohort_rule_node_type")
 }
 
 enum LogicalOperator {
   AND
   OR
+
+  @@map("logical_operator")
 }
 
 enum ComparisonOperator {
@@ -106,6 +130,8 @@ enum ComparisonOperator {
   STARTS_WITH
   ENDS_WITH
   DATE_WITHIN
+
+  @@map("comparison_operator")
 }
 
 enum DerivedVariableType {
@@ -114,12 +140,16 @@ enum DerivedVariableType {
   BOOLEAN
   DATE
   TEXT
+
+  @@map("derived_variable_type")
 }
 
 enum StatisticalPlanStatus {
   DRAFT
   APPROVED
   ARCHIVED
+
+  @@map("statistical_plan_status")
 }
 
 enum AnalysisRunStatus {
@@ -129,6 +159,8 @@ enum AnalysisRunStatus {
   FAILED
   CANCELLED
   APPROVED
+
+  @@map("analysis_run_status")
 }
 
 enum AnalysisResultType {
@@ -139,6 +171,8 @@ enum AnalysisResultType {
   SURVIVAL
   SENSITIVITY
   OTHER
+
+  @@map("analysis_result_type")
 }
 
 enum ArtifactStatus {
@@ -146,6 +180,8 @@ enum ArtifactStatus {
   APPROVED
   SUPERSEDED
   ARCHIVED
+
+  @@map("artifact_status")
 }
 
 enum ManuscriptStatus {
@@ -154,6 +190,8 @@ enum ManuscriptStatus {
   APPROVED
   EXPORTED
   ARCHIVED
+
+  @@map("manuscript_status")
 }
 
 enum ManuscriptVersionStatus {
@@ -162,6 +200,8 @@ enum ManuscriptVersionStatus {
   APPROVED_FOR_EXPORT
   EXPORTED
   SUPERSEDED
+
+  @@map("manuscript_version_status")
 }
 
 enum ManuscriptSectionType {
@@ -173,6 +213,8 @@ enum ManuscriptSectionType {
   DISCUSSION
   REFERENCES
   SUPPLEMENT
+
+  @@map("manuscript_section_type")
 }
 
 enum ReferenceType {
@@ -182,6 +224,8 @@ enum ReferenceType {
   GUIDELINE
   PREPRINT
   OTHER
+
+  @@map("reference_type")
 }
 
 enum AIJobType {
@@ -191,6 +235,8 @@ enum AIJobType {
   DISCUSSION_DRAFT
   TABLE_NARRATIVE
   REVISION_ASSIST
+
+  @@map("ai_job_type")
 }
 
 enum AIJobStatus {
@@ -199,6 +245,8 @@ enum AIJobStatus {
   COMPLETED
   FAILED
   CANCELLED
+
+  @@map("ai_job_status")
 }
 
 enum AIOutputStatus {
@@ -208,12 +256,16 @@ enum AIOutputStatus {
   APPROVED
   REJECTED
   SUPERSEDED
+
+  @@map("ai_output_status")
 }
 
 enum AIReviewDecision {
   APPROVED
   REJECTED
   NEEDS_CHANGES
+
+  @@map("ai_review_decision")
 }
 
 enum ApprovalTargetType {
@@ -226,6 +278,8 @@ enum ApprovalTargetType {
   MANUSCRIPT_VERSION
   IRB_SUBMISSION
   PROTOCOL
+
+  @@map("approval_target_type")
 }
 
 enum ApprovalStatus {
@@ -233,12 +287,16 @@ enum ApprovalStatus {
   APPROVED
   REJECTED
   REVOKED
+
+  @@map("approval_status")
 }
 
 enum SignatureStatus {
   PENDING
   SIGNED
   REVOKED
+
+  @@map("signature_status")
 }
 
 enum IRBSubmissionStatus {
@@ -248,11 +306,15 @@ enum IRBSubmissionStatus {
   APPROVED
   REJECTED
   EXPIRED
+
+  @@map("irb_submission_status")
 }
 
 enum AuditOutcome {
   SUCCESS
   FAILURE
+
+  @@map("audit_outcome")
 }
 
 enum AccessAction {
@@ -261,22 +323,26 @@ enum AccessAction {
   EXPORT
   API_READ
   API_WRITE
+
+  @@map("access_action")
 }
 
 enum AccessOutcome {
   ALLOWED
   DENIED
+
+  @@map("access_outcome")
 }
 
 model User {
   id             String            @id @default(uuid()) @db.Uuid
-  tenantId       String?           @db.Uuid
-  createdById    String?           @db.Uuid
+  tenantId       String?           @map("tenant_id") @db.Uuid
+  createdById    String?           @map("created_by_id") @db.Uuid
   email          String            @unique
-  fullName       String
-  passwordHash   String?
-  isActive       Boolean           @default(true)
-  lastLoginAt    DateTime?         @db.Timestamptz(6)
+  fullName       String            @map("full_name")
+  passwordHash   String?           @map("password_hash")
+  isActive       Boolean           @default(true) @map("is_active")
+  lastLoginAt    DateTime?         @map("last_login_at") @db.Timestamptz(6)
   createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt      DateTime?         @map("deleted_at") @db.Timestamptz(6)
@@ -285,17 +351,18 @@ model User {
 
   @@index([tenantId, deletedAt])
   @@index([createdById])
+  @@map("user")
 }
 
 model Tenant {
   id           String             @id @default(uuid()) @db.Uuid
-  tenantId     String             @unique @db.Uuid
-  createdById  String             @db.Uuid
+  tenantId     String             @unique @map("tenant_id") @db.Uuid
+  createdById  String             @map("created_by_id") @db.Uuid
   name         String
   slug         String             @unique
   type         TenantType
-  isActive     Boolean            @default(true)
-  metadataJson Json?
+  isActive     Boolean            @default(true) @map("is_active")
+  metadataJson Json?              @map("metadata_json")
   createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime?          @map("deleted_at") @db.Timestamptz(6)
@@ -303,17 +370,18 @@ model Tenant {
   projects     Project[]
 
   @@index([type, deletedAt])
+  @@map("tenant")
 }
 
 model TenantMembership {
   id          String           @id @default(uuid()) @db.Uuid
-  tenantId    String           @db.Uuid
-  createdById String           @db.Uuid
-  userId      String           @db.Uuid
-  roleId      String           @db.Uuid
+  tenantId    String           @map("tenant_id") @db.Uuid
+  createdById String           @map("created_by_id") @db.Uuid
+  userId      String           @map("user_id") @db.Uuid
+  roleId      String           @map("role_id") @db.Uuid
   status      MembershipStatus @default(INVITED)
-  invitedAt   DateTime?        @db.Timestamptz(6)
-  joinedAt    DateTime?        @db.Timestamptz(6)
+  invitedAt   DateTime?        @map("invited_at") @db.Timestamptz(6)
+  joinedAt    DateTime?        @map("joined_at") @db.Timestamptz(6)
   createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt   DateTime?        @map("deleted_at") @db.Timestamptz(6)
@@ -324,16 +392,17 @@ model TenantMembership {
   @@index([tenantId, userId, deletedAt])
   @@index([userId, status])
   @@index([roleId])
+  @@map("tenant_membership")
 }
 
 model Role {
   id              String             @id @default(uuid()) @db.Uuid
-  tenantId        String?            @db.Uuid
-  createdById     String?            @db.Uuid
+  tenantId        String?            @map("tenant_id") @db.Uuid
+  createdById     String?            @map("created_by_id") @db.Uuid
   name            String
   key             String             @unique
   scope           RoleScope
-  isSystem        Boolean            @default(false)
+  isSystem        Boolean            @default(false) @map("is_system")
   createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
@@ -342,12 +411,13 @@ model Role {
   projectMembers  ProjectMember[]
 
   @@index([tenantId, scope, deletedAt])
+  @@map("role")
 }
 
 model Permission {
   id              String             @id @default(uuid()) @db.Uuid
-  tenantId        String?            @db.Uuid
-  createdById     String?            @db.Uuid
+  tenantId        String?            @map("tenant_id") @db.Uuid
+  createdById     String?            @map("created_by_id") @db.Uuid
   key             String             @unique
   name            String
   description     String?
@@ -357,14 +427,15 @@ model Permission {
   rolePermissions RolePermission[]
 
   @@index([tenantId, deletedAt])
+  @@map("permission")
 }
 
 model RolePermission {
   id           String     @id @default(uuid()) @db.Uuid
-  tenantId     String?    @db.Uuid
-  createdById  String?    @db.Uuid
-  roleId       String     @db.Uuid
-  permissionId String     @db.Uuid
+  tenantId     String?    @map("tenant_id") @db.Uuid
+  createdById  String?    @map("created_by_id") @db.Uuid
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
   createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime?  @map("deleted_at") @db.Timestamptz(6)
@@ -373,20 +444,21 @@ model RolePermission {
 
   @@unique([roleId, permissionId])
   @@index([tenantId, deletedAt])
+  @@map("role_permission")
 }
 
 model Project {
   id               String            @id @default(uuid()) @db.Uuid
-  tenantId         String            @db.Uuid
-  createdById      String            @db.Uuid
+  tenantId         String            @map("tenant_id") @db.Uuid
+  createdById      String            @map("created_by_id") @db.Uuid
   title            String
   code             String?
   slug             String
   description      String?
   status           ProjectStatus     @default(DRAFT)
-  startsAt         DateTime?         @db.Timestamptz(6)
-  endsAt           DateTime?         @db.Timestamptz(6)
-  metadataJson     Json?
+  startsAt         DateTime?         @map("starts_at") @db.Timestamptz(6)
+  endsAt           DateTime?         @map("ends_at") @db.Timestamptz(6)
+  metadataJson     Json?             @map("metadata_json")
   createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt        DateTime?         @map("deleted_at") @db.Timestamptz(6)
@@ -408,15 +480,16 @@ model Project {
   @@unique([tenantId, slug])
   @@index([tenantId, status, deletedAt])
   @@index([createdById])
+  @@map("project")
 }
 
 model ProjectMember {
   id          String    @id @default(uuid()) @db.Uuid
-  tenantId    String    @db.Uuid
-  createdById String    @db.Uuid
-  projectId   String    @db.Uuid
-  userId      String    @db.Uuid
-  roleId      String    @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  createdById String    @map("created_by_id") @db.Uuid
+  projectId   String    @map("project_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  roleId      String    @map("role_id") @db.Uuid
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
@@ -427,20 +500,21 @@ model ProjectMember {
   @@index([tenantId, projectId, deletedAt])
   @@index([userId, deletedAt])
   @@index([roleId])
+  @@map("project_member")
 }
 
 model Protocol {
   id             String         @id @default(uuid()) @db.Uuid
-  tenantId       String         @db.Uuid
-  createdById    String         @db.Uuid
-  projectId      String         @db.Uuid
+  tenantId       String         @map("tenant_id") @db.Uuid
+  createdById    String         @map("created_by_id") @db.Uuid
+  projectId      String         @map("project_id") @db.Uuid
   version        Int
   title          String
   synopsis       String?
   status         ApprovalStatus @default(PENDING)
-  documentPath   String?
+  documentPath   String?        @map("document_path")
   checksum       String?
-  metadataJson   Json?
+  metadataJson   Json?          @map("metadata_json")
   createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(6)
@@ -449,43 +523,45 @@ model Protocol {
 
   @@unique([projectId, version])
   @@index([tenantId, projectId, deletedAt])
+  @@map("protocol")
 }
 
 model StudyDocument {
   id            String       @id @default(uuid()) @db.Uuid
-  tenantId      String       @db.Uuid
-  createdById   String       @db.Uuid
-  projectId     String       @db.Uuid
-  documentType  DocumentType
+  tenantId      String       @map("tenant_id") @db.Uuid
+  createdById   String       @map("created_by_id") @db.Uuid
+  projectId     String       @map("project_id") @db.Uuid
+  documentType  DocumentType @map("document_type")
   title         String
-  storagePath   String
-  mimeType      String?
-  fileSizeBytes BigInt?
+  storagePath   String       @map("storage_path")
+  mimeType      String?      @map("mime_type")
+  fileSizeBytes BigInt?      @map("file_size_bytes")
   checksum      String?
-  metadataJson  Json?
+  metadataJson  Json?        @map("metadata_json")
   createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
   project       Project      @relation(fields: [projectId], references: [id], onDelete: Restrict)
 
   @@index([tenantId, projectId, documentType, deletedAt])
+  @@map("study_document")
 }
 
 model DataSource {
   id              String           @id @default(uuid()) @db.Uuid
-  tenantId        String           @db.Uuid
-  createdById     String           @db.Uuid
-  projectId       String           @db.Uuid
+  tenantId        String           @map("tenant_id") @db.Uuid
+  createdById     String           @map("created_by_id") @db.Uuid
+  projectId       String           @map("project_id") @db.Uuid
   name            String
   type            DataSourceType
   status          DataSourceStatus @default(PENDING)
-  sourceUri       String?
-  storagePath     String?
+  sourceUri       String?          @map("source_uri")
+  storagePath     String?          @map("storage_path")
   checksum        String?
-  contentType     String?
-  rowCount        Int?
-  metadataJson    Json?
-  ingestedAt      DateTime?        @db.Timestamptz(6)
+  contentType     String?          @map("content_type")
+  rowCount        Int?             @map("row_count")
+  metadataJson    Json?            @map("metadata_json")
+  ingestedAt      DateTime?        @map("ingested_at") @db.Timestamptz(6)
   createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz(6)
@@ -495,50 +571,52 @@ model DataSource {
   cohorts         Cohort[]
 
   @@index([tenantId, projectId, status, deletedAt])
+  @@map("data_source")
 }
 
 model Dataset {
-  id               String            @id @default(uuid()) @db.Uuid
-  tenantId         String            @db.Uuid
-  createdById      String            @db.Uuid
-  projectId        String            @db.Uuid
-  dataSourceId     String?           @db.Uuid
+  id               String           @id @default(uuid()) @db.Uuid
+  tenantId         String           @map("tenant_id") @db.Uuid
+  createdById      String           @map("created_by_id") @db.Uuid
+  projectId        String           @map("project_id") @db.Uuid
+  dataSourceId     String?          @map("data_source_id") @db.Uuid
   name             String
   description      String?
-  status           DatasetStatus     @default(DRAFT)
-  metadataJson     Json?
-  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt        DateTime?         @map("deleted_at") @db.Timestamptz(6)
-  project          Project           @relation(fields: [projectId], references: [id], onDelete: Restrict)
-  dataSource       DataSource?       @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+  status           DatasetStatus    @default(DRAFT)
+  metadataJson     Json?            @map("metadata_json")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  project          Project          @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  dataSource       DataSource?      @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
   versions         DatasetVersion[]
   derivedVariables DerivedVariable[]
 
   @@index([tenantId, projectId, status, deletedAt])
+  @@map("dataset")
 }
 
 model DatasetVersion {
   id              String               @id @default(uuid()) @db.Uuid
-  tenantId        String               @db.Uuid
-  createdById     String               @db.Uuid
-  projectId       String               @db.Uuid
-  datasetId       String               @db.Uuid
-  dataSourceId    String?              @db.Uuid
-  cohortId        String?              @db.Uuid
-  parentVersionId String?              @db.Uuid
-  versionNumber   Int
+  tenantId        String               @map("tenant_id") @db.Uuid
+  createdById     String               @map("created_by_id") @db.Uuid
+  projectId       String               @map("project_id") @db.Uuid
+  datasetId       String               @map("dataset_id") @db.Uuid
+  dataSourceId    String?              @map("data_source_id") @db.Uuid
+  cohortId        String?              @map("cohort_id") @db.Uuid
+  parentVersionId String?              @map("parent_version_id") @db.Uuid
+  versionNumber   Int                  @map("version_number")
   status          DatasetVersionStatus @default(BUILDING)
-  isImmutable     Boolean              @default(true)
-  rowCount        Int?
-  columnCount     Int?
-  schemaHash      String?
-  contentChecksum String?
-  storagePath     String?
-  manifestJson    Json?
-  lineageJson     Json?
-  approvedAt      DateTime?            @db.Timestamptz(6)
-  approvedById    String?              @db.Uuid
+  isImmutable     Boolean              @default(true) @map("is_immutable")
+  rowCount        Int?                 @map("row_count")
+  columnCount     Int?                 @map("column_count")
+  schemaHash      String?              @map("schema_hash")
+  contentChecksum String?              @map("content_checksum")
+  storagePath     String?              @map("storage_path")
+  manifestJson    Json?                @map("manifest_json")
+  lineageJson     Json?                @map("lineage_json")
+  approvedAt      DateTime?            @map("approved_at") @db.Timestamptz(6)
+  approvedById    String?              @map("approved_by_id") @db.Uuid
   createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime?            @map("deleted_at") @db.Timestamptz(6)
@@ -556,21 +634,22 @@ model DatasetVersion {
   @@index([tenantId, projectId, status, deletedAt])
   @@index([contentChecksum])
   @@index([cohortId])
+  @@map("dataset_version")
 }
 
 model Cohort {
   id              String       @id @default(uuid()) @db.Uuid
-  tenantId        String       @db.Uuid
-  createdById     String       @db.Uuid
-  projectId       String       @db.Uuid
-  dataSourceId    String?      @db.Uuid
+  tenantId        String       @map("tenant_id") @db.Uuid
+  createdById     String       @map("created_by_id") @db.Uuid
+  projectId       String       @map("project_id") @db.Uuid
+  dataSourceId    String?      @map("data_source_id") @db.Uuid
   name            String
   description     String?
   status          CohortStatus @default(DRAFT)
-  versionNumber   Int          @default(1)
-  snapshotAt      DateTime?    @db.Timestamptz(6)
-  subjectCount    Int?
-  metadataJson    Json?
+  versionNumber   Int          @default(1) @map("version_number")
+  snapshotAt      DateTime?    @map("snapshot_at") @db.Timestamptz(6)
+  subjectCount    Int?         @map("subject_count")
+  metadataJson    Json?        @map("metadata_json")
   createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime?    @map("deleted_at") @db.Timestamptz(6)
@@ -580,21 +659,22 @@ model Cohort {
   datasetVersions DatasetVersion[]
 
   @@index([tenantId, projectId, status, deletedAt])
+  @@map("cohort")
 }
 
 model CohortRule {
   id              String             @id @default(uuid()) @db.Uuid
-  tenantId        String             @db.Uuid
-  createdById     String             @db.Uuid
-  cohortId        String             @db.Uuid
-  parentRuleId    String?            @db.Uuid
-  nodeType        CohortRuleNodeType
-  logicalOperator LogicalOperator?
-  fieldKey        String?
-  fieldLabel      String?
+  tenantId        String             @map("tenant_id") @db.Uuid
+  createdById     String             @map("created_by_id") @db.Uuid
+  cohortId        String             @map("cohort_id") @db.Uuid
+  parentRuleId    String?            @map("parent_rule_id") @db.Uuid
+  nodeType        CohortRuleNodeType @map("node_type")
+  logicalOperator LogicalOperator?   @map("logical_operator")
+  fieldKey        String?            @map("field_key")
+  fieldLabel      String?            @map("field_label")
   operator        ComparisonOperator?
-  valueJson       Json?
-  sortOrder       Int                @default(0)
+  valueJson       Json?              @map("value_json")
+  sortOrder       Int                @default(0) @map("sort_order")
   createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
@@ -604,20 +684,21 @@ model CohortRule {
 
   @@index([tenantId, cohortId, deletedAt])
   @@index([parentRuleId, sortOrder])
+  @@map("cohort_rule")
 }
 
 model DerivedVariable {
   id                     String              @id @default(uuid()) @db.Uuid
-  tenantId               String              @db.Uuid
-  createdById            String              @db.Uuid
-  projectId              String              @db.Uuid
-  datasetId              String              @db.Uuid
-  sourceDatasetVersionId String?             @db.Uuid
+  tenantId               String              @map("tenant_id") @db.Uuid
+  createdById            String              @map("created_by_id") @db.Uuid
+  projectId              String              @map("project_id") @db.Uuid
+  datasetId              String              @map("dataset_id") @db.Uuid
+  sourceDatasetVersionId String?             @map("source_dataset_version_id") @db.Uuid
   name                   String
   label                  String?
   type                   DerivedVariableType
   expression             String
-  definitionJson         Json?
+  definitionJson         Json?               @map("definition_json")
   createdAt              DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt              DateTime?           @map("deleted_at") @db.Timestamptz(6)
@@ -625,17 +706,18 @@ model DerivedVariable {
 
   @@index([tenantId, projectId, deletedAt])
   @@index([datasetId, deletedAt])
+  @@map("derived_variable")
 }
 
 model StatisticalPlan {
   id           String                @id @default(uuid()) @db.Uuid
-  tenantId     String                @db.Uuid
-  createdById  String                @db.Uuid
-  projectId    String                @db.Uuid
+  tenantId     String                @map("tenant_id") @db.Uuid
+  createdById  String                @map("created_by_id") @db.Uuid
+  projectId    String                @map("project_id") @db.Uuid
   name         String
   version      Int                   @default(1)
   status       StatisticalPlanStatus @default(DRAFT)
-  planJson     Json
+  planJson     Json                  @map("plan_json")
   checksum     String?
   createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -645,25 +727,26 @@ model StatisticalPlan {
 
   @@unique([projectId, name, version])
   @@index([tenantId, projectId, status, deletedAt])
+  @@map("statistical_plan")
 }
 
 model AnalysisRun {
   id                String            @id @default(uuid()) @db.Uuid
-  tenantId          String            @db.Uuid
-  createdById       String            @db.Uuid
-  projectId         String            @db.Uuid
-  datasetVersionId  String            @db.Uuid
-  statisticalPlanId String?           @db.Uuid
-  runKey            String?
+  tenantId          String            @map("tenant_id") @db.Uuid
+  createdById       String            @map("created_by_id") @db.Uuid
+  projectId         String            @map("project_id") @db.Uuid
+  datasetVersionId  String            @map("dataset_version_id") @db.Uuid
+  statisticalPlanId String?           @map("statistical_plan_id") @db.Uuid
+  runKey            String?           @map("run_key")
   status            AnalysisRunStatus @default(QUEUED)
-  parametersJson    Json?
-  runtimeVersion    String?
-  engineVersion     String?
-  packageLockHash   String?
-  jobPayloadJson    Json?
-  startedAt         DateTime?         @db.Timestamptz(6)
-  completedAt       DateTime?         @db.Timestamptz(6)
-  errorMessage      String?
+  parametersJson    Json?             @map("parameters_json")
+  runtimeVersion    String?           @map("runtime_version")
+  engineVersion     String?           @map("engine_version")
+  packageLockHash   String?           @map("package_lock_hash")
+  jobPayloadJson    Json?             @map("job_payload_json")
+  startedAt         DateTime?         @map("started_at") @db.Timestamptz(6)
+  completedAt       DateTime?         @map("completed_at") @db.Timestamptz(6)
+  errorMessage      String?           @map("error_message")
   createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt         DateTime?         @map("deleted_at") @db.Timestamptz(6)
@@ -677,18 +760,19 @@ model AnalysisRun {
   @@index([tenantId, projectId, status, deletedAt])
   @@index([datasetVersionId, status])
   @@index([runKey])
+  @@map("analysis_run")
 }
 
 model AnalysisResult {
   id             String             @id @default(uuid()) @db.Uuid
-  tenantId       String             @db.Uuid
-  createdById    String             @db.Uuid
-  projectId      String             @db.Uuid
-  analysisRunId  String             @db.Uuid
-  resultType     AnalysisResultType
+  tenantId       String             @map("tenant_id") @db.Uuid
+  createdById    String             @map("created_by_id") @db.Uuid
+  projectId      String             @map("project_id") @db.Uuid
+  analysisRunId  String             @map("analysis_run_id") @db.Uuid
+  resultType     AnalysisResultType @map("result_type")
   title          String
   status         ArtifactStatus     @default(DRAFT)
-  summaryJson    Json?
+  summaryJson    Json?              @map("summary_json")
   checksum       String?
   createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -699,20 +783,21 @@ model AnalysisResult {
 
   @@index([tenantId, projectId, resultType, status, deletedAt])
   @@index([analysisRunId])
+  @@map("analysis_result")
 }
 
 model ResultTable {
   id               String         @id @default(uuid()) @db.Uuid
-  tenantId         String         @db.Uuid
-  createdById      String         @db.Uuid
-  projectId        String         @db.Uuid
-  analysisResultId String         @db.Uuid
-  tableKey         String
+  tenantId         String         @map("tenant_id") @db.Uuid
+  createdById      String         @map("created_by_id") @db.Uuid
+  projectId        String         @map("project_id") @db.Uuid
+  analysisResultId String         @map("analysis_result_id") @db.Uuid
+  tableKey         String         @map("table_key")
   title            String
   status           ArtifactStatus @default(DRAFT)
-  storagePath      String?
+  storagePath      String?        @map("storage_path")
   checksum         String?
-  specJson         Json?
+  specJson         Json?          @map("spec_json")
   createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt        DateTime?      @map("deleted_at") @db.Timestamptz(6)
@@ -720,20 +805,21 @@ model ResultTable {
 
   @@unique([analysisResultId, tableKey])
   @@index([tenantId, projectId, status, deletedAt])
+  @@map("result_table")
 }
 
 model ResultFigure {
   id               String         @id @default(uuid()) @db.Uuid
-  tenantId         String         @db.Uuid
-  createdById      String         @db.Uuid
-  projectId        String         @db.Uuid
-  analysisResultId String         @db.Uuid
-  figureKey        String
+  tenantId         String         @map("tenant_id") @db.Uuid
+  createdById      String         @map("created_by_id") @db.Uuid
+  projectId        String         @map("project_id") @db.Uuid
+  analysisResultId String         @map("analysis_result_id") @db.Uuid
+  figureKey        String         @map("figure_key")
   title            String
   status           ArtifactStatus @default(DRAFT)
-  storagePath      String?
+  storagePath      String?        @map("storage_path")
   checksum         String?
-  specJson         Json?
+  specJson         Json?          @map("spec_json")
   createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt        DateTime?      @map("deleted_at") @db.Timestamptz(6)
@@ -741,18 +827,19 @@ model ResultFigure {
 
   @@unique([analysisResultId, figureKey])
   @@index([tenantId, projectId, status, deletedAt])
+  @@map("result_figure")
 }
 
 model Manuscript {
   id            String           @id @default(uuid()) @db.Uuid
-  tenantId      String           @db.Uuid
-  createdById   String           @db.Uuid
-  projectId     String           @db.Uuid
+  tenantId      String           @map("tenant_id") @db.Uuid
+  createdById   String           @map("created_by_id") @db.Uuid
+  projectId     String           @map("project_id") @db.Uuid
   title         String
-  shortTitle    String?
+  shortTitle    String?          @map("short_title")
   status        ManuscriptStatus @default(DRAFT)
-  targetJournal String?
-  metadataJson  Json?
+  targetJournal String?          @map("target_journal")
+  metadataJson  Json?            @map("metadata_json")
   createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime?        @map("deleted_at") @db.Timestamptz(6)
@@ -761,19 +848,20 @@ model Manuscript {
   aiJobs        AIJob[]
 
   @@index([tenantId, projectId, status, deletedAt])
+  @@map("manuscript")
 }
 
 model ManuscriptVersion {
   id               String                  @id @default(uuid()) @db.Uuid
-  tenantId         String                  @db.Uuid
-  createdById      String                  @db.Uuid
-  manuscriptId     String                  @db.Uuid
-  versionNumber    Int
+  tenantId         String                  @map("tenant_id") @db.Uuid
+  createdById      String                  @map("created_by_id") @db.Uuid
+  manuscriptId     String                  @map("manuscript_id") @db.Uuid
+  versionNumber    Int                     @map("version_number")
   status           ManuscriptVersionStatus @default(DRAFT)
-  changeSummary    String?
-  outlineJson      Json?
-  approvedAt       DateTime?               @db.Timestamptz(6)
-  approvedById     String?                 @db.Uuid
+  changeSummary    String?                 @map("change_summary")
+  outlineJson      Json?                   @map("outline_json")
+  approvedAt       DateTime?               @map("approved_at") @db.Timestamptz(6)
+  approvedById     String?                 @map("approved_by_id") @db.Uuid
   createdAt        DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt        DateTime?               @map("deleted_at") @db.Timestamptz(6)
@@ -784,18 +872,19 @@ model ManuscriptVersion {
 
   @@unique([manuscriptId, versionNumber])
   @@index([tenantId, status, deletedAt])
+  @@map("manuscript_version")
 }
 
 model ManuscriptSection {
   id                  String               @id @default(uuid()) @db.Uuid
-  tenantId            String               @db.Uuid
-  createdById         String               @db.Uuid
-  manuscriptVersionId String               @db.Uuid
-  sectionType         ManuscriptSectionType
+  tenantId            String               @map("tenant_id") @db.Uuid
+  createdById         String               @map("created_by_id") @db.Uuid
+  manuscriptVersionId String               @map("manuscript_version_id") @db.Uuid
+  sectionType         ManuscriptSectionType @map("section_type")
   title               String?
-  sortOrder           Int                  @default(0)
+  sortOrder           Int                  @default(0) @map("sort_order")
   content             String?
-  sourceSummaryJson   Json?
+  sourceSummaryJson   Json?                @map("source_summary_json")
   createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt           DateTime?            @map("deleted_at") @db.Timestamptz(6)
@@ -805,22 +894,23 @@ model ManuscriptSection {
 
   @@index([tenantId, sectionType, deletedAt])
   @@index([manuscriptVersionId, sectionType, sortOrder])
+  @@map("manuscript_section")
 }
 
 model Reference {
   id                  String            @id @default(uuid()) @db.Uuid
-  tenantId            String            @db.Uuid
-  createdById         String            @db.Uuid
-  manuscriptVersionId String            @db.Uuid
-  citationKey         String
-  referenceType       ReferenceType
+  tenantId            String            @map("tenant_id") @db.Uuid
+  createdById         String            @map("created_by_id") @db.Uuid
+  manuscriptVersionId String            @map("manuscript_version_id") @db.Uuid
+  citationKey         String            @map("citation_key")
+  referenceType       ReferenceType     @map("reference_type")
   title               String
-  authorsJson         Json?
+  authorsJson         Json?             @map("authors_json")
   journal             String?
-  publicationYear     Int?
+  publicationYear     Int?              @map("publication_year")
   doi                 String?
   url                 String?
-  metadataJson        Json?
+  metadataJson        Json?             @map("metadata_json")
   createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt           DateTime?         @map("deleted_at") @db.Timestamptz(6)
@@ -828,28 +918,29 @@ model Reference {
 
   @@unique([manuscriptVersionId, citationKey])
   @@index([tenantId, deletedAt])
+  @@map("reference")
 }
 
 model AIJob {
   id                    String             @id @default(uuid()) @db.Uuid
-  tenantId              String             @db.Uuid
-  createdById           String             @db.Uuid
-  projectId             String             @db.Uuid
-  manuscriptId          String?            @db.Uuid
-  manuscriptVersionId   String?            @db.Uuid
-  manuscriptSectionId   String?            @db.Uuid
-  datasetVersionId      String?            @db.Uuid
-  analysisRunId         String?            @db.Uuid
-  jobType               AIJobType
+  tenantId              String             @map("tenant_id") @db.Uuid
+  createdById           String             @map("created_by_id") @db.Uuid
+  projectId             String             @map("project_id") @db.Uuid
+  manuscriptId          String?            @map("manuscript_id") @db.Uuid
+  manuscriptVersionId   String?            @map("manuscript_version_id") @db.Uuid
+  manuscriptSectionId   String?            @map("manuscript_section_id") @db.Uuid
+  datasetVersionId      String?            @map("dataset_version_id") @db.Uuid
+  analysisRunId         String?            @map("analysis_run_id") @db.Uuid
+  jobType               AIJobType          @map("job_type")
   status                AIJobStatus        @default(QUEUED)
   provider              String?
   model                 String?
-  promptTemplateKey     String?
-  promptTemplateVersion String?
-  phiMode               String?
-  inputBundleJson       Json?
-  startedAt             DateTime?          @db.Timestamptz(6)
-  completedAt           DateTime?          @db.Timestamptz(6)
+  promptTemplateKey     String?            @map("prompt_template_key")
+  promptTemplateVersion String?            @map("prompt_template_version")
+  phiMode               String?            @map("phi_mode")
+  inputBundleJson       Json?              @map("input_bundle_json")
+  startedAt             DateTime?          @map("started_at") @db.Timestamptz(6)
+  completedAt           DateTime?          @map("completed_at") @db.Timestamptz(6)
   createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt             DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt             DateTime?          @map("deleted_at") @db.Timestamptz(6)
@@ -865,44 +956,46 @@ model AIJob {
   @@index([datasetVersionId])
   @@index([analysisRunId])
   @@index([manuscriptSectionId])
+  @@map("ai_job")
 }
 
 model AIOutput {
-  id                  String             @id @default(uuid()) @db.Uuid
-  tenantId            String             @db.Uuid
-  createdById         String             @db.Uuid
-  aiJobId             String             @db.Uuid
-  projectId           String             @db.Uuid
-  datasetVersionId    String             @db.Uuid
-  analysisRunId       String             @db.Uuid
-  manuscriptSectionId String             @db.Uuid
-  outputText          String
-  structuredJson      Json?
-  validationJson      Json?
+  id                  String            @id @default(uuid()) @db.Uuid
+  tenantId            String            @map("tenant_id") @db.Uuid
+  createdById         String            @map("created_by_id") @db.Uuid
+  aiJobId             String            @map("ai_job_id") @db.Uuid
+  projectId           String            @map("project_id") @db.Uuid
+  datasetVersionId    String            @map("dataset_version_id") @db.Uuid
+  analysisRunId       String            @map("analysis_run_id") @db.Uuid
+  manuscriptSectionId String            @map("manuscript_section_id") @db.Uuid
+  outputText          String            @map("output_text")
+  structuredJson      Json?             @map("structured_json")
+  validationJson      Json?             @map("validation_json")
   checksum            String?
-  status              AIOutputStatus     @default(DRAFT)
-  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt           DateTime?          @map("deleted_at") @db.Timestamptz(6)
-  aiJob               AIJob              @relation(fields: [aiJobId], references: [id], onDelete: Cascade)
-  datasetVersion      DatasetVersion     @relation(fields: [datasetVersionId], references: [id], onDelete: Restrict)
-  analysisRun         AnalysisRun        @relation(fields: [analysisRunId], references: [id], onDelete: Restrict)
-  manuscriptSection   ManuscriptSection  @relation(fields: [manuscriptSectionId], references: [id], onDelete: Restrict)
+  status              AIOutputStatus    @default(DRAFT)
+  createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  aiJob               AIJob             @relation(fields: [aiJobId], references: [id], onDelete: Cascade)
+  datasetVersion      DatasetVersion    @relation(fields: [datasetVersionId], references: [id], onDelete: Restrict)
+  analysisRun         AnalysisRun       @relation(fields: [analysisRunId], references: [id], onDelete: Restrict)
+  manuscriptSection   ManuscriptSection @relation(fields: [manuscriptSectionId], references: [id], onDelete: Restrict)
   reviews             AIReview[]
 
   @@index([tenantId, projectId, status, deletedAt])
   @@index([datasetVersionId, analysisRunId, manuscriptSectionId])
+  @@map("ai_output")
 }
 
 model AIReview {
   id           String           @id @default(uuid()) @db.Uuid
-  tenantId     String           @db.Uuid
-  createdById  String           @db.Uuid
-  aiOutputId   String           @db.Uuid
-  reviewerId   String           @db.Uuid
+  tenantId     String           @map("tenant_id") @db.Uuid
+  createdById  String           @map("created_by_id") @db.Uuid
+  aiOutputId   String           @map("ai_output_id") @db.Uuid
+  reviewerId   String           @map("reviewer_id") @db.Uuid
   decision     AIReviewDecision
   comments     String?
-  reviewedAt   DateTime         @default(now()) @db.Timestamptz(6)
+  reviewedAt   DateTime         @default(now()) @map("reviewed_at") @db.Timestamptz(6)
   createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime?        @map("deleted_at") @db.Timestamptz(6)
@@ -910,20 +1003,21 @@ model AIReview {
 
   @@index([tenantId, aiOutputId, deletedAt])
   @@index([reviewerId])
+  @@map("ai_review")
 }
 
 model Approval {
   id            String             @id @default(uuid()) @db.Uuid
-  tenantId      String             @db.Uuid
-  createdById   String             @db.Uuid
-  projectId     String?            @db.Uuid
-  targetType    ApprovalTargetType
-  targetId      String             @db.Uuid
+  tenantId      String             @map("tenant_id") @db.Uuid
+  createdById   String             @map("created_by_id") @db.Uuid
+  projectId     String?            @map("project_id") @db.Uuid
+  targetType    ApprovalTargetType @map("target_type")
+  targetId      String             @map("target_id") @db.Uuid
   status        ApprovalStatus     @default(PENDING)
-  requestedById String             @db.Uuid
-  decidedById   String?            @db.Uuid
+  requestedById String             @map("requested_by_id") @db.Uuid
+  decidedById   String?            @map("decided_by_id") @db.Uuid
   notes         String?
-  decidedAt     DateTime?          @db.Timestamptz(6)
+  decidedAt     DateTime?          @map("decided_at") @db.Timestamptz(6)
   createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime?          @map("deleted_at") @db.Timestamptz(6)
@@ -932,18 +1026,19 @@ model Approval {
 
   @@index([tenantId, projectId, targetType, status, deletedAt])
   @@index([targetType, targetId])
+  @@map("approval")
 }
 
 model Signature {
   id            String          @id @default(uuid()) @db.Uuid
-  tenantId      String          @db.Uuid
-  createdById   String          @db.Uuid
-  approvalId    String          @db.Uuid
-  signerId      String          @db.Uuid
+  tenantId      String          @map("tenant_id") @db.Uuid
+  createdById   String          @map("created_by_id") @db.Uuid
+  approvalId    String          @map("approval_id") @db.Uuid
+  signerId      String          @map("signer_id") @db.Uuid
   status        SignatureStatus @default(PENDING)
-  signatureHash String
-  signedAt      DateTime?       @db.Timestamptz(6)
-  metadataJson  Json?
+  signatureHash String          @map("signature_hash")
+  signedAt      DateTime?       @map("signed_at") @db.Timestamptz(6)
+  metadataJson  Json?           @map("metadata_json")
   createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime?       @map("deleted_at") @db.Timestamptz(6)
@@ -951,20 +1046,21 @@ model Signature {
 
   @@index([tenantId, approvalId, status, deletedAt])
   @@index([signerId])
+  @@map("signature")
 }
 
 model IRBSubmission {
   id              String              @id @default(uuid()) @db.Uuid
-  tenantId        String              @db.Uuid
-  createdById     String              @db.Uuid
-  projectId       String              @db.Uuid
-  protocolId      String?             @db.Uuid
-  referenceNumber String?
+  tenantId        String              @map("tenant_id") @db.Uuid
+  createdById     String              @map("created_by_id") @db.Uuid
+  projectId       String              @map("project_id") @db.Uuid
+  protocolId      String?             @map("protocol_id") @db.Uuid
+  referenceNumber String?             @map("reference_number")
   status          IRBSubmissionStatus @default(DRAFT)
-  submissionJson  Json?
-  submittedAt     DateTime?           @db.Timestamptz(6)
-  approvedAt      DateTime?           @db.Timestamptz(6)
-  expiresAt       DateTime?           @db.Timestamptz(6)
+  submissionJson  Json?               @map("submission_json")
+  submittedAt     DateTime?           @map("submitted_at") @db.Timestamptz(6)
+  approvedAt      DateTime?           @map("approved_at") @db.Timestamptz(6)
+  expiresAt       DateTime?           @map("expires_at") @db.Timestamptz(6)
   createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime?           @map("deleted_at") @db.Timestamptz(6)
@@ -973,25 +1069,26 @@ model IRBSubmission {
 
   @@index([tenantId, projectId, status, deletedAt])
   @@index([referenceNumber])
+  @@map("irb_submission")
 }
 
 model AuditLog {
   id           String       @id @default(uuid()) @db.Uuid
-  tenantId     String       @db.Uuid
-  createdById  String       @db.Uuid
-  projectId    String?      @db.Uuid
-  actorUserId  String?      @db.Uuid
-  resourceType String
-  resourceId   String?      @db.Uuid
+  tenantId     String       @map("tenant_id") @db.Uuid
+  createdById  String       @map("created_by_id") @db.Uuid
+  projectId    String?      @map("project_id") @db.Uuid
+  actorUserId  String?      @map("actor_user_id") @db.Uuid
+  resourceType String       @map("resource_type")
+  resourceId   String?      @map("resource_id") @db.Uuid
   action       String
   outcome      AuditOutcome
-  requestId    String?
-  ipAddress    String?
-  userAgent    String?
-  beforeJson   Json?
-  afterJson    Json?
-  metadataJson Json?
-  occurredAt   DateTime     @default(now()) @db.Timestamptz(6)
+  requestId    String?      @map("request_id")
+  ipAddress    String?      @map("ip_address")
+  userAgent    String?      @map("user_agent")
+  beforeJson   Json?        @map("before_json")
+  afterJson    Json?        @map("after_json")
+  metadataJson Json?        @map("metadata_json")
+  occurredAt   DateTime     @default(now()) @map("occurred_at") @db.Timestamptz(6)
   createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime?    @map("deleted_at") @db.Timestamptz(6)
@@ -1000,23 +1097,24 @@ model AuditLog {
   @@index([resourceType, resourceId])
   @@index([actorUserId, occurredAt])
   @@index([requestId])
+  @@map("audit_log")
 }
 
 model AccessLog {
   id           String        @id @default(uuid()) @db.Uuid
-  tenantId     String        @db.Uuid
-  createdById  String        @db.Uuid
-  projectId    String?       @db.Uuid
-  actorUserId  String?       @db.Uuid
-  resourceType String
-  resourceId   String?       @db.Uuid
+  tenantId     String        @map("tenant_id") @db.Uuid
+  createdById  String        @map("created_by_id") @db.Uuid
+  projectId    String?       @map("project_id") @db.Uuid
+  actorUserId  String?       @map("actor_user_id") @db.Uuid
+  resourceType String        @map("resource_type")
+  resourceId   String?       @map("resource_id") @db.Uuid
   action       AccessAction
   outcome      AccessOutcome
-  requestId    String?
-  ipAddress    String?
-  userAgent    String?
-  metadataJson Json?
-  accessedAt   DateTime      @default(now()) @db.Timestamptz(6)
+  requestId    String?       @map("request_id")
+  ipAddress    String?       @map("ip_address")
+  userAgent    String?       @map("user_agent")
+  metadataJson Json?         @map("metadata_json")
+  accessedAt   DateTime      @default(now()) @map("accessed_at") @db.Timestamptz(6)
   createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime?     @map("deleted_at") @db.Timestamptz(6)
@@ -1025,4 +1123,5 @@ model AccessLog {
   @@index([actorUserId, accessedAt])
   @@index([resourceType, resourceId])
   @@index([requestId])
+  @@map("access_log")
 }

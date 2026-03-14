@@ -9,6 +9,7 @@ import { TenantMembershipGuard } from "../common/guards/tenant-membership.guard"
 import { AuthenticatedUser } from "../common/types/authenticated-user.type";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
 import { CreateDatasetVersionDto } from "./dto/create-dataset-version.dto";
+import { QueryDatasetsDto } from "./dto/query-datasets.dto";
 import { QueryDatasetVersionsDto } from "./dto/query-dataset-versions.dto";
 import { DatasetsService } from "./datasets.service";
 
@@ -18,6 +19,16 @@ import { DatasetsService } from "./datasets.service";
 @Controller("tenants/:tenantId/projects/:projectId/datasets")
 export class DatasetsController {
   constructor(private readonly datasetsService: DatasetsService) {}
+
+  @RequirePermission(PermissionKey.PROJECT_READ)
+  @Get()
+  listDatasets(
+    @CurrentTenant() tenantId: string,
+    @Param("projectId") projectId: string,
+    @Query() query: QueryDatasetsDto
+  ) {
+    return this.datasetsService.listDatasets(tenantId, projectId, query);
+  }
 
   @RequirePermission(PermissionKey.DATASET_CREATE)
   @Post()

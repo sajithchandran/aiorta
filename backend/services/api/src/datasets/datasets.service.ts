@@ -8,6 +8,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { TenantPrismaService } from "../prisma/tenant-prisma.service";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
 import { CreateDatasetVersionDto } from "./dto/create-dataset-version.dto";
+import { QueryDatasetsDto } from "./dto/query-datasets.dto";
 import { QueryDatasetVersionsDto } from "./dto/query-dataset-versions.dto";
 
 @Injectable()
@@ -44,6 +45,49 @@ export class DatasetsService {
 
       throw error;
     }
+  }
+
+  async listDatasets(tenantId: string, projectId: string, query: QueryDatasetsDto) {
+    await this.ensureProjectExists(tenantId, projectId);
+
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+    const where: Prisma.DatasetWhereInput = this.tenantPrisma.tenantWhere(tenantId, { projectId });
+
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    if (query.search) {
+      where.OR = [
+        {
+          name: {
+            contains: query.search,
+            mode: "insensitive"
+          }
+        },
+        {
+          description: {
+            contains: query.search,
+            mode: "insensitive"
+          }
+        }
+      ];
+    }
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.dataset.findMany({
+        where,
+        orderBy: {
+          createdAt: "desc"
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize
+      }),
+      this.prisma.dataset.count({ where })
+    ]);
+
+    return { success: true, items, page, pageSize, total };
   }
 
   async createDatasetVersion(

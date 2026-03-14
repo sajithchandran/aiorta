@@ -4,6 +4,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { TenantPrismaService } from "../prisma/tenant-prisma.service";
 import { CreateAnalysisRunDto } from "./dto/create-analysis-run.dto";
 import { CreateStatisticalPlanDto } from "./dto/create-statistical-plan.dto";
+import { QueryAnalysisRunsDto } from "./dto/query-analysis-runs.dto";
 
 @Injectable()
 export class AnalyticsService {
@@ -58,6 +59,33 @@ export class AnalyticsService {
         status: AnalysisRunStatus.QUEUED
       })
     });
+  }
+
+  async listAnalysisRuns(tenantId: string, projectId: string, query: QueryAnalysisRunsDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+    const where = this.tenantPrisma.tenantWhere(tenantId, {
+      projectId,
+      ...(query.status ? { status: query.status } : {})
+    });
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.analysisRun.findMany({
+        where,
+        include: {
+          datasetVersion: true,
+          statisticalPlan: true
+        },
+        orderBy: {
+          createdAt: "desc"
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize
+      }),
+      this.prisma.analysisRun.count({ where })
+    ]);
+
+    return { success: true, items, page, pageSize, total };
   }
 
   async getAnalysisRunStatus(tenantId: string, projectId: string, analysisRunId: string) {
