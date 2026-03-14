@@ -15,6 +15,7 @@
     "db:down": "docker compose -f infra/compose/postgres.compose.yml down",
     "db:logs": "docker compose -f infra/compose/postgres.compose.yml logs -f postgres",
     "db:push": "pnpm prisma:generate && DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@localhost:54329/aiorta?schema=public} ./services/api/node_modules/.bin/prisma db push --schema prisma/schema.prisma",
+    "db:seed": "pnpm prisma:generate && DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@localhost:54329/aiorta?schema=public} ./services/api/node_modules/.bin/ts-node --project tsconfig.seed.json prisma/seed.ts",
     "build": "pnpm --filter @aiorta/api build",
     "build:api": "pnpm --filter @aiorta/api build",
     "typecheck": "pnpm --filter @aiorta/api typecheck",

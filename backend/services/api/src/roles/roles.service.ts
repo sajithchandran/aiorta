@@ -1,8 +1,27 @@
-import { Injectable, NotImplementedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class RolesService {
-  listRoles(): never {
-    throw new NotImplementedException("Role queries are not implemented yet.");
+  constructor(private readonly prisma: PrismaService) {}
+
+  listRoles(tenantId: string) {
+    return this.prisma.role.findMany({
+      where: {
+        OR: [{ tenantId }, { tenantId: null }],
+        deletedAt: null
+      },
+      include: {
+        rolePermissions: {
+          where: {
+            deletedAt: null
+          },
+          include: {
+            permission: true
+          }
+        }
+      },
+      orderBy: [{ isSystem: "desc" }, { name: "asc" }]
+    });
   }
 }

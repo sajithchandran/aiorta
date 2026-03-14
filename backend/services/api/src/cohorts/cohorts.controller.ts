@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { CurrentTenant } from "../common/decorators/current-tenant.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
-import { Permissions } from "../common/decorators/permissions.decorator";
+import { RequirePermission } from "../common/decorators/require-permission.decorator";
 import { PermissionKey } from "../common/enums/permission-key.enum";
 import { PermissionsGuard } from "../common/guards/permissions.guard";
 import { TenantMembershipGuard } from "../common/guards/tenant-membership.guard";
@@ -18,10 +19,10 @@ import { QueryCohortsDto } from "./dto/query-cohorts.dto";
 export class CohortsController {
   constructor(private readonly cohortsService: CohortsService) {}
 
-  @Permissions(PermissionKey.COHORT_CREATE)
+  @RequirePermission(PermissionKey.COHORT_CREATE)
   @Post()
   createCohort(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() payload: CreateCohortDto
@@ -29,31 +30,32 @@ export class CohortsController {
     return this.cohortsService.createCohort(tenantId, projectId, user.userId, payload);
   }
 
-  @Permissions(PermissionKey.COHORT_CREATE)
+  @RequirePermission(PermissionKey.COHORT_CREATE)
   @Post(":cohortId/rules")
   addRule(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Param("cohortId") cohortId: string,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() payload: CreateCohortRuleDto
   ) {
-    return this.cohortsService.addRule(tenantId, projectId, cohortId, payload);
+    return this.cohortsService.addRule(tenantId, projectId, cohortId, user.userId, payload);
   }
 
-  @Permissions(PermissionKey.PROJECT_READ)
+  @RequirePermission(PermissionKey.PROJECT_READ)
   @Get()
   listCohorts(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Query() query: QueryCohortsDto
   ) {
     return this.cohortsService.listCohorts(tenantId, projectId, query);
   }
 
-  @Permissions(PermissionKey.PROJECT_READ)
+  @RequirePermission(PermissionKey.PROJECT_READ)
   @Get(":cohortId/preview")
   previewCohort(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Param("cohortId") cohortId: string
   ) {

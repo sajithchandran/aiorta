@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { CurrentTenant } from "../common/decorators/current-tenant.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
-import { Permissions } from "../common/decorators/permissions.decorator";
+import { RequirePermission } from "../common/decorators/require-permission.decorator";
 import { PermissionKey } from "../common/enums/permission-key.enum";
 import { PermissionsGuard } from "../common/guards/permissions.guard";
 import { TenantMembershipGuard } from "../common/guards/tenant-membership.guard";
@@ -17,10 +18,10 @@ import { ReviewAiOutputDto } from "./dto/review-ai-output.dto";
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
-  @Permissions(PermissionKey.AI_JOB_CREATE)
+  @RequirePermission(PermissionKey.AI_JOB_CREATE)
   @Post("ai-jobs")
   createAiJob(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() payload: CreateAiJobDto
@@ -28,20 +29,20 @@ export class AiController {
     return this.aiService.createAiJob(tenantId, projectId, user.userId, payload);
   }
 
-  @Permissions(PermissionKey.PROJECT_READ)
+  @RequirePermission(PermissionKey.PROJECT_READ)
   @Get("ai-outputs/:aiOutputId")
   getAiOutput(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Param("aiOutputId") aiOutputId: string
   ) {
     return this.aiService.getAiOutput(tenantId, projectId, aiOutputId);
   }
 
-  @Permissions(PermissionKey.AI_JOB_CREATE)
+  @RequirePermission(PermissionKey.AI_JOB_CREATE)
   @Post("ai-outputs/:aiOutputId/reviews")
   reviewAiOutput(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Param("aiOutputId") aiOutputId: string,
     @CurrentUser() user: AuthenticatedUser,

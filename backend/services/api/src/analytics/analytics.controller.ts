@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { CurrentTenant } from "../common/decorators/current-tenant.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
-import { Permissions } from "../common/decorators/permissions.decorator";
+import { RequirePermission } from "../common/decorators/require-permission.decorator";
 import { PermissionKey } from "../common/enums/permission-key.enum";
 import { PermissionsGuard } from "../common/guards/permissions.guard";
 import { TenantMembershipGuard } from "../common/guards/tenant-membership.guard";
@@ -17,10 +18,10 @@ import { CreateStatisticalPlanDto } from "./dto/create-statistical-plan.dto";
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
-  @Permissions(PermissionKey.ANALYSIS_RUN_CREATE)
+  @RequirePermission(PermissionKey.ANALYSIS_RUN_CREATE)
   @Post("statistical-plans")
   createStatisticalPlan(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() payload: CreateStatisticalPlanDto
@@ -28,10 +29,10 @@ export class AnalyticsController {
     return this.analyticsService.createStatisticalPlan(tenantId, projectId, user.userId, payload);
   }
 
-  @Permissions(PermissionKey.ANALYSIS_RUN_CREATE)
+  @RequirePermission(PermissionKey.ANALYSIS_RUN_CREATE)
   @Post("analysis-runs")
   startAnalysisRun(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() payload: CreateAnalysisRunDto
@@ -39,20 +40,20 @@ export class AnalyticsController {
     return this.analyticsService.startAnalysisRun(tenantId, projectId, user.userId, payload);
   }
 
-  @Permissions(PermissionKey.PROJECT_READ)
+  @RequirePermission(PermissionKey.PROJECT_READ)
   @Get("analysis-runs/:analysisRunId")
   getAnalysisRunStatus(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Param("analysisRunId") analysisRunId: string
   ) {
     return this.analyticsService.getAnalysisRunStatus(tenantId, projectId, analysisRunId);
   }
 
-  @Permissions(PermissionKey.PROJECT_READ)
+  @RequirePermission(PermissionKey.PROJECT_READ)
   @Get("analysis-runs/:analysisRunId/artifacts")
   getArtifactSummary(
-    @Param("tenantId") tenantId: string,
+    @CurrentTenant() tenantId: string,
     @Param("projectId") projectId: string,
     @Param("analysisRunId") analysisRunId: string
   ) {
