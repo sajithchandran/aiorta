@@ -19,6 +19,15 @@ import { ManuscriptsService } from "./manuscripts.service";
 export class ManuscriptsController {
   constructor(private readonly manuscriptsService: ManuscriptsService) {}
 
+  @RequirePermission(PermissionKey.PROJECT_READ)
+  @Get("manuscripts")
+  listManuscripts(
+    @CurrentTenant() tenantId: string,
+    @Param("projectId") projectId: string
+  ) {
+    return this.manuscriptsService.listManuscripts(tenantId, projectId);
+  }
+
   @RequirePermission(PermissionKey.MANUSCRIPT_CREATE)
   @Post("manuscripts")
   createManuscript(

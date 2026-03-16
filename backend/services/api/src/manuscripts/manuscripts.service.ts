@@ -27,6 +27,17 @@ export class ManuscriptsService {
     });
   }
 
+  async listManuscripts(tenantId: string, projectId: string) {
+    return this.prisma.manuscript.findMany({
+      where: this.tenantPrisma.tenantWhere(tenantId, {
+        projectId
+      }),
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+  }
+
   async createVersion(
     tenantId: string,
     projectId: string,
